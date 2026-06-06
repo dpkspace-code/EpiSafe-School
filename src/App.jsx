@@ -7,6 +7,7 @@ import Registry from './pages/Registry'
 import Screener from './pages/Screener'
 import Guides from './pages/Guides'
 import SelfRegister from './pages/SelfRegister'
+import Pending from './pages/Pending'
 import './App.css'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState(null)
   const [showLanding, setShowLanding] = useState(true)
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -31,6 +33,18 @@ function App() {
     })
   }, [])
 
+  useEffect(() => {
+    if (userRole === 'manager') fetchPendingCount()
+  }, [userRole])
+
+  async function fetchPendingCount() {
+    const { count } = await supabase
+      .from('learners')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+    setPendingCount(count || 0)
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut()
     setSession(null)
@@ -46,7 +60,10 @@ function App() {
 
   if (showLanding && !session) return <Landing onEnter={() => setShowLanding(false)} />
 
-  if (!session) return <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setUserRole(session.user.user_metadata?.role || 'learner') })} />
+  if (!session) return <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => {
+    setSession(session)
+    setUserRole(session.user.user_metadata?.role || 'learner')
+  })} />
 
   if (userRole === 'learner') return <SelfRegister session={session} onLogout={handleLogout} />
 
@@ -62,6 +79,10 @@ function App() {
           <button className={page === 'screener' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('screener')}>📋 Screener</button>
           <button className={page === 'registry' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('registry')}>👥 Registry</button>
           <button className={page === 'guides' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('guides')}>📖 Guides</button>
+          <button className={page === 'pending' ? 'nav-btn active' : 'nav-btn'} onClick={() => { setPage('pending'); fetchPendingCount() }}
+            style={{ color: pendingCount > 0 ? '#fa8c16' : '' }}>
+            ⏳ Pending {pendingCount > 0 ? `(${pendingCount})` : ''}
+          </button>
         </nav>
         <div style={{ marginTop: 'auto', padding: '20px 12px' }}>
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px', paddingLeft: '4px' }}>👤 Manager</div>
@@ -74,6 +95,7 @@ function App() {
         {page === 'screener' && <Screener />}
         {page === 'registry' && <Registry />}
         {page === 'guides' && <Guides />}
+        {page === 'pending' && <Pending />}
       </div>
     </div>
   )

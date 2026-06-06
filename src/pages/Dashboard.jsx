@@ -5,42 +5,54 @@ function Dashboard({ setPage }) {
   const [learnerCount, setLearnerCount] = useState(0)
   const [screeningCount, setScreeningCount] = useState(0)
   const [highRiskCount, setHighRiskCount] = useState(0)
+  const [pendingCount, setPendingCount] = useState(0)
   const [seizureData, setSeizureData] = useState([])
-  const [zoneData, setZoneData] = useState([])
+  const [triggerData, setTriggerData] = useState([])
 
   useEffect(() => {
     async function fetchStats() {
-      const { count: lCount } = await supabase.from('learners').select('*', { count: 'exact', head: true })
-      const { count: sCount } = await supabase.from('screener_responses').select('*', { count: 'exact', head: true })
-      const { count: hCount } = await supabase.from('screener_responses').select('*', { count: 'exact', head: true }).eq('risk_level', 'High')
-      const { data: learners } = await supabase.from('learners').select('seizure_type, triggers')
+      const { count: lCount } = await supabase
+        .from('learners').select('*', { count: 'exact', head: true })
+        .eq('status', 'active')
+
+      const { count: sCount } = await supabase
+        .from('screener_responses').select('*', { count: 'exact', head: true })
+
+      const { count: hCount } = await supabase
+        .from('screener_responses').select('*', { count: 'exact', head: true })
+        .eq('risk_level', 'High')
+
+      const { count: pCount } = await supabase
+        .from('learners').select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+
+      const { data: learners } = await supabase
+        .from('learners').select('seizure_type, triggers')
+        .eq('status', 'active')
 
       setLearnerCount(lCount || 0)
       setScreeningCount(sCount || 0)
       setHighRiskCount(hCount || 0)
+      setPendingCount(pCount || 0)
 
       if (learners) {
         const seizureCounts = {}
         learners.forEach(l => {
-          if (l.seizure_type) {
-            seizureCounts[l.seizure_type] = (seizureCounts[l.seizure_type] || 0) + 1
-          }
+          if (l.seizure_type) seizureCounts[l.seizure_type] = (seizureCounts[l.seizure_type] || 0) + 1
         })
         setSeizureData(Object.entries(seizureCounts).map(([name, count]) => ({ name, count })))
 
-        const zoneCounts = {}
+        const triggerCounts = {}
         learners.forEach(l => {
-          if (l.triggers) {
-            zoneCounts[l.triggers] = (zoneCounts[l.triggers] || 0) + 1
-          }
+          if (l.triggers) triggerCounts[l.triggers] = (triggerCounts[l.triggers] || 0) + 1
         })
-        setZoneData(Object.entries(zoneCounts).map(([name, count]) => ({ name, count })))
+        setTriggerData(Object.entries(triggerCounts).map(([name, count]) => ({ name, count })))
       }
     }
     fetchStats()
   }, [])
 
-  const colors = ['#3ECF8E', '#185FA5', '#BA7517', '#A32D2D', '#3B6D11', '#993556']
+  const colors = ['#3ECF8E','#185FA5','#BA7517','#A32D2D','#3B6D11','#993556']
 
   function BarChart({ data, title, emptyMsg }) {
     const max = Math.max(...data.map(d => d.count), 1)
@@ -57,7 +69,7 @@ function Dashboard({ setPage }) {
                 <span style={{ fontWeight: '500', color: colors[i % colors.length] }}>{d.count}</span>
               </div>
               <div style={{ background: '#f0f4f8', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
-                <div style={{ width: `${(d.count / max) * 100}%`, background: colors[i % colors.length], height: '100%', borderRadius: '4px', transition: 'width 0.6s ease' }} />
+                <div style={{ width: `${(d.count / max) * 100}%`, background: colors[i % colors.length], height: '100%', borderRadius: '4px' }} />
               </div>
             </div>
           ))
@@ -74,7 +86,7 @@ function Dashboard({ setPage }) {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-number">{learnerCount}</div>
-          <div className="stat-label">Learners in Registry</div>
+          <div className="stat-label">Confirmed in Registry</div>
         </div>
         <div className="stat-card">
           <div className="stat-number">{screeningCount}</div>
@@ -86,9 +98,25 @@ function Dashboard({ setPage }) {
         </div>
       </div>
 
+      {pendingCount > 0 && (
+        <div className="card" style={{ background: '#fffbe6', border: '1px solid #ffe58f', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 style={{ color: '#854F0B', marginBottom: '4px' }}>⏳ Pending Approvals</h2>
+              <p style={{ color: '#854F0B', fontSize: '13px' }}>
+                <strong>{pendingCount}</strong> learner{pendingCount > 1 ? 's' : ''} waiting for your review and approval
+              </p>
+            </div>
+            <button className="btn btn-primary" onClick={() => setPage('pending')}>
+              Review Now →
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-        <BarChart data={seizureData} title="📊 Seizure Types" emptyMsg="No learner data yet" />
-        <BarChart data={zoneData} title="⚡ Common Triggers" emptyMsg="No trigger data yet" />
+        <BarChart data={seizureData} title="📊 Seizure Types" emptyMsg="No confirmed learner data yet" />
+        <BarChart data={triggerData} title="⚡ Common Triggers" emptyMsg="No trigger data yet" />
       </div>
 
       <div className="card">
@@ -97,6 +125,7 @@ function Dashboard({ setPage }) {
           <button className="btn btn-primary" onClick={() => setPage('screener')}>📋 New Screening</button>
           <button className="btn btn-primary" onClick={() => setPage('registry')}>➕ Add Learner</button>
           <button className="btn btn-secondary" onClick={() => setPage('guides')}>📖 View Guides</button>
+          {pendingCount > 0 && <button className="btn" style={{ background: '#ffe58f', color: '#854F0B' }} onClick={() => setPage('pending')}>⏳ Pending ({pendingCount})</button>}
         </div>
       </div>
 
@@ -104,8 +133,7 @@ function Dashboard({ setPage }) {
         <h2>About EpiSafe</h2>
         <p style={{ lineHeight: '1.7' }}>
           EpiSafe helps schools identify learners at risk of seizures, maintain a secure epilepsy registry,
-          and equip staff with the knowledge to respond effectively. Use the screener to flag learners
-          for medical follow-up, and the registry to track confirmed cases and their action plans.
+          and equip staff with the knowledge to respond effectively.
         </p>
       </div>
     </div>
