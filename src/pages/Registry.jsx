@@ -1,10 +1,110 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 
+const seizureTypes = [
+  { value: 'Tonic-clonic (Grand mal)', label: 'Tonic-clonic (Grand mal)', desc: 'Body stiffens then jerks — person may fall and lose consciousness' },
+  { value: 'Absence', label: 'Absence', desc: 'Brief blank stare, unresponsive for a few seconds — looks like daydreaming' },
+  { value: 'Focal (Partial)', label: 'Focal (Partial)', desc: 'Affects one part of body, person may stay conscious but appear confused' },
+  { value: 'Atonic (Drop attack)', label: 'Atonic (Drop attack)', desc: 'Sudden loss of muscle tone causing person to fall without warning' },
+  { value: 'Myoclonic', label: 'Myoclonic', desc: 'Sudden brief muscle jerks, often in arms or upper body' },
+  { value: 'Unknown / Not yet diagnosed', label: 'Unknown / Not yet diagnosed', desc: 'Seizure type not yet confirmed by a doctor' },
+]
+
+const medications = [
+  { value: 'Sodium Valproate (Epilim)', label: 'Sodium Valproate (Epilim)', desc: 'Common for tonic-clonic and absence seizures' },
+  { value: 'Carbamazepine (Tegretol)', label: 'Carbamazepine (Tegretol)', desc: 'Often used for focal seizures' },
+  { value: 'Lamotrigine (Lamictal)', label: 'Lamotrigine (Lamictal)', desc: 'Used for various seizure types' },
+  { value: 'Levetiracetam (Keppra)', label: 'Levetiracetam (Keppra)', desc: 'Broad spectrum anti-epileptic' },
+  { value: 'Phenobarbitone', label: 'Phenobarbitone', desc: 'Older medication still used in some cases' },
+  { value: 'Clonazepam (Rivotril)', label: 'Clonazepam (Rivotril)', desc: 'Used for myoclonic and absence seizures' },
+  { value: 'Multiple medications', label: 'Multiple medications', desc: 'Learner is on more than one anti-epileptic drug' },
+  { value: 'No medication', label: 'No medication', desc: 'Not currently on any anti-epileptic medication' },
+  { value: 'Unknown', label: 'Unknown', desc: 'Medication details not available' },
+]
+
+const triggers = [
+  { value: 'Stress and anxiety', label: 'Stress and anxiety', desc: 'Exams, conflicts, emotional pressure' },
+  { value: 'Sleep deprivation', label: 'Sleep deprivation', desc: 'Too little or disrupted sleep' },
+  { value: 'Flashing or flickering lights', label: 'Flashing or flickering lights', desc: 'Screens, strobe effects, sunlight through trees' },
+  { value: 'Missed medication', label: 'Missed medication', desc: 'Skipping anti-epileptic doses' },
+  { value: 'Fever or illness', label: 'Fever or illness', desc: 'High temperature or infections' },
+  { value: 'Dehydration or skipped meals', label: 'Dehydration or skipped meals', desc: 'Low blood sugar or dehydration' },
+  { value: 'Overheating or physical exhaustion', label: 'Overheating or physical exhaustion', desc: 'During PE or sports activities' },
+  { value: 'Hormonal changes', label: 'Hormonal changes', desc: 'Puberty related changes' },
+  { value: 'Multiple triggers', label: 'Multiple triggers', desc: 'More than one known trigger' },
+  { value: 'Unknown triggers', label: 'Unknown triggers', desc: 'Triggers not yet identified' },
+]
+
+const grades = ['Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12','Grade 13']
+
+const actionSteps = [
+  'Stay calm and stay with the learner',
+  'Note the time the seizure starts',
+  'Clear area of hard or sharp objects',
+  'Cushion the learner\'s head gently',
+  'Do NOT restrain the learner',
+  'Place in recovery position after convulsions stop',
+  'Call emergency contact if seizure exceeds 5 minutes',
+  'Call 114 (ambulance) if first seizure or no recovery',
+  'Reassure learner when they regain awareness',
+  'Record duration and type of movements',
+]
+
+const schoolsByZone = {
+  'Zone 1': [
+    'Adolphe de Plevitz SSS','James Burty David SSS','Droopnath Ramphul State College',
+    'Frank Richard SSS','Goodlands SSS','Lady Sushil Ramgoolam SSS','Pailles SSS',
+    'Pamplemousses SSS','Piton SC','Port Louis North SSS','Port Louis SSS',
+    'G. M. Dawjee Atchia State College','Prof. Hassan Raffa SSS',
+    'Rabindranath Tagore SSS','Ramsoondur Prayag SSS','R. Seeneevassen SSS',
+    'Riviere du Rempart SSS','Royal College Port Louis','Sharma Jugdambi SSS',
+    'Shri Beekrumsingh Ramlallah SSS','Sir A. R. Mohamed SSS','Terre Rouge SSS',
+    'Triolet SSS','Alpha College','Bhujoharry College','BPS Fatima College',
+    'Bradley College','College Ideal','College Pere Laval','Cosmopolitain College',
+    'DAV HSC College','DAV College','Labourdonnais College','Friendship College (Boys)',
+    'Friendship College (Girls)','International College','Islamic Cultural College',
+    'Islamic Cultural Form VI College','London College','Loreto College Port Louis',
+    'Madad Ul Islam Girls College','Merton College','Muslim Girls College',
+    'Pamplemousses High School','Port Louis High School','S Munrakhun College',
+    'Saint Bartholomew\'s College','Universal College',
+  ],
+  'Zone 2': [
+    'Beau Bassin SSS','Bel Air Riviere Seche SSS','Bon Accueil State College',
+    'Camp de Masque State College','Ebene SSS (Boys)','Ebene SSS (Girls)',
+    'John Kennedy College','Mahatma Gandhi Institute','Mahatma Gandhi SS Centre de Flacq',
+    'Mahatma Gandhi SS Moka','Manilall Doctor SSS','Marcel Cabon SSS',
+    'Quartier Militaire SSS','Queen Elizabeth College','Rajcoomar Gujadhur SSS',
+    'Sebastopol SSS','Shrimati Indira Gandhi SSS','Sir Leckraz Teelock SSS',
+    'Byron College','La Confiance College','College des Ville Soeurs',
+    'Loreto College Rose Hill','Rose Hill Muslim College','Royal College Curepipe',
+    'Royal College Beau Bassin','St Andrew\'s College','St Joseph College',
+    'St Mary\'s College','Vieux Grand Port SSS','Sodnac SSS',
+  ],
+  'Zone 3': [
+    'Curepipe College','Bel Ombre SSS','Chemin Grenier SSS','Henrietta SSS',
+    'Mahebourg SSS','Mare d\'Albert SSS','New Eben Ezer SSS','Phoenix SSS',
+    'Plaine Magnien SSS','Riviere des Anguilles State College','Rose Belle SSS',
+    'Sookdeo Bissoondoyal State College','Stanley College','Surinam SSS',
+    'Tyack SSS','Wooton SSS','Loreto College Curepipe','St Gabriel College',
+    'St Esprit College','Sodnac College','Nouvelle France College',
+    'Savanne College','Grand Bois College',
+  ],
+  'Zone 4': [
+    'Bambous SSS','Cascades SSS','Ecole du Centre SSS','Floreal SSS',
+    'Forest Side SSS','Quatre Bornes SSS','Royal College Rose Hill',
+    'Vacoas SSS','Highlands College','Belle Rose SSS','Tamarin SSS',
+    'Black River SSS','Flic en Flac SSS','Petite Riviere SSS',
+    'Dr Regis Chaperon SSS','Loreto College Quatre Bornes','St Andrews College',
+    'Clavis College','Savannah College',
+  ],
+}
+
 function Registry() {
   const [learners, setLearners] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [selectedZone, setSelectedZone] = useState('')
+  const [selectedActions, setSelectedActions] = useState([...actionSteps])
   const [form, setForm] = useState({
     full_name: '', grade: '', class: '', seizure_type: '',
     medication: '', triggers: '', emergency_contact_name: '',
@@ -15,20 +115,27 @@ function Registry() {
 
   async function fetchLearners() {
     setLoading(true)
-    const { data, error } = await supabase.from('learners').select('*').order('created_at', { ascending: false })
-    console.log('fetch error:', error)
+    const { data } = await supabase.from('learners').select('*').order('created_at', { ascending: false })
     setLearners(data || [])
     setLoading(false)
   }
 
+  function toggleAction(step) {
+    setSelectedActions(prev =>
+      prev.includes(step) ? prev.filter(s => s !== step) : [...prev, step]
+    )
+  }
+
   async function handleSubmit() {
     if (!form.full_name) return alert('Please enter learner name')
-    const { data, error } = await supabase.from('learners').insert([form])
-    console.log('insert error:', error)
+    const finalForm = { ...form, action_plan: selectedActions.join(' | ') }
+    const { error } = await supabase.from('learners').insert([finalForm])
     if (error) {
       alert('Error saving: ' + error.message)
     } else {
       setForm({ full_name: '', grade: '', class: '', seizure_type: '', medication: '', triggers: '', emergency_contact_name: '', emergency_contact_phone: '', action_plan: '', status: 'active' })
+      setSelectedZone('')
+      setSelectedActions([...actionSteps])
       setShowForm(false)
       fetchLearners()
     }
@@ -40,7 +147,11 @@ function Registry() {
     fetchLearners()
   }
 
-  const badgeClass = status => status === 'active' ? 'badge badge-green' : status === 'review' ? 'badge badge-amber' : 'badge badge-red'
+  const badgeClass = s => s === 'active' ? 'badge badge-green' : s === 'review' ? 'badge badge-amber' : 'badge badge-red'
+  const selectedSeizure = seizureTypes.find(s => s.value === form.seizure_type)
+  const selectedMed = medications.find(m => m.value === form.medication)
+  const selectedTrigger = triggers.find(t => t.value === form.triggers)
+  const schoolList = selectedZone ? schoolsByZone[selectedZone] : []
 
   return (
     <div>
@@ -63,32 +174,19 @@ function Registry() {
               <input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} placeholder="Full name" />
             </div>
             <div className="form-group">
+              <label>Gender</label>
+              <select value={form.class} onChange={e => setForm({ ...form, class: e.target.value })}>
+                <option value="">-- Select gender --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <div className="form-group">
               <label>Grade</label>
-              <input value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })} placeholder="e.g. Grade 8" />
-            </div>
-            <div className="form-group">
-              <label>Class</label>
-              <input value={form.class} onChange={e => setForm({ ...form, class: e.target.value })} placeholder="e.g. 8A" />
-            </div>
-            <div className="form-group">
-              <label>Seizure Type</label>
-              <input value={form.seizure_type} onChange={e => setForm({ ...form, seizure_type: e.target.value })} placeholder="e.g. Absence seizures" />
-            </div>
-            <div className="form-group">
-              <label>Medication</label>
-              <input value={form.medication} onChange={e => setForm({ ...form, medication: e.target.value })} placeholder="Current medication" />
-            </div>
-            <div className="form-group">
-              <label>Triggers</label>
-              <input value={form.triggers} onChange={e => setForm({ ...form, triggers: e.target.value })} placeholder="Known triggers" />
-            </div>
-            <div className="form-group">
-              <label>Emergency Contact Name</label>
-              <input value={form.emergency_contact_name} onChange={e => setForm({ ...form, emergency_contact_name: e.target.value })} placeholder="Parent/Guardian name" />
-            </div>
-            <div className="form-group">
-              <label>Emergency Contact Phone</label>
-              <input value={form.emergency_contact_phone} onChange={e => setForm({ ...form, emergency_contact_phone: e.target.value })} placeholder="Phone number" />
+              <select value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })}>
+                <option value="">-- Select grade --</option>
+                {grades.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
             </div>
             <div className="form-group">
               <label>Status</label>
@@ -98,12 +196,83 @@ function Registry() {
                 <option value="pending">Pending Evaluation</option>
               </select>
             </div>
+            <div className="form-group">
+              <label>Zone</label>
+              <select value={selectedZone} onChange={e => { setSelectedZone(e.target.value); setForm({ ...form, emergency_contact_phone: '' }) }}>
+                <option value="">-- Select zone first --</option>
+                <option value="Zone 1">Zone 1 — Port Louis & North</option>
+                <option value="Zone 2">Zone 2 — East & Central</option>
+                <option value="Zone 3">Zone 3 — South & South East</option>
+                <option value="Zone 4">Zone 4 — West & Highlands</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>School Name</label>
+              <select value={form.emergency_contact_phone} onChange={e => setForm({ ...form, emergency_contact_phone: e.target.value })} disabled={!selectedZone}>
+                <option value="">{selectedZone ? '-- Select school --' : '-- Select zone first --'}</option>
+                {schoolList.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
           </div>
+
           <div className="form-group">
-            <label>Seizure Action Plan</label>
-            <textarea rows={3} value={form.action_plan} onChange={e => setForm({ ...form, action_plan: e.target.value })} placeholder="Describe what staff should do during a seizure..." />
+            <label>Seizure Type</label>
+            <select value={form.seizure_type} onChange={e => setForm({ ...form, seizure_type: e.target.value })}>
+              <option value="">-- Select seizure type --</option>
+              {seizureTypes.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+            {selectedSeizure && (
+              <div style={{ background: '#e6fff5', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#0F6E56', marginTop: '-8px', marginBottom: '12px' }}>
+                ℹ️ {selectedSeizure.desc}
+              </div>
+            )}
           </div>
-          <button className="btn btn-primary" onClick={handleSubmit}>Save Learner</button>
+
+          <div className="form-group">
+            <label>Current Medication</label>
+            <select value={form.medication} onChange={e => setForm({ ...form, medication: e.target.value })}>
+              <option value="">-- Select medication --</option>
+              {medications.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+            {selectedMed && (
+              <div style={{ background: '#e6f1fb', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#185FA5', marginTop: '-8px', marginBottom: '12px' }}>
+                ℹ️ {selectedMed.desc}
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Known Triggers</label>
+            <select value={form.triggers} onChange={e => setForm({ ...form, triggers: e.target.value })}>
+              <option value="">-- Select main trigger --</option>
+              {triggers.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            {selectedTrigger && (
+              <div style={{ background: '#fffbe6', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#854F0B', marginTop: '-8px', marginBottom: '12px' }}>
+                ℹ️ {selectedTrigger.desc}
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Emergency Contact Name</label>
+            <input value={form.emergency_contact_name} onChange={e => setForm({ ...form, emergency_contact_name: e.target.value })} placeholder="Parent/Guardian name" />
+          </div>
+
+          <div className="form-group">
+            <label style={{ marginBottom: '10px', display: 'block' }}>Seizure Action Plan</label>
+            <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>Tick all steps that apply for this learner. Untick any that do not apply.</p>
+            {actionSteps.map((step, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', marginBottom: '6px', background: selectedActions.includes(step) ? '#e6fff5' : '#f9f9f9', borderRadius: '8px', border: selectedActions.includes(step) ? '1px solid #3ECF8E' : '1px solid #eee', cursor: 'pointer' }} onClick={() => toggleAction(step)}>
+                <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: selectedActions.includes(step) ? '#3ECF8E' : '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {selectedActions.includes(step) && <span style={{ color: 'white', fontSize: '14px' }}>✓</span>}
+                </div>
+                <span style={{ fontSize: '13px', color: '#333' }}><strong>{i + 1}.</strong> {step}</span>
+              </div>
+            ))}
+          </div>
+
+          <button className="btn btn-primary" style={{ marginTop: '16px' }} onClick={handleSubmit}>Save Learner</button>
         </div>
       )}
 
@@ -114,16 +283,16 @@ function Registry() {
           <table>
             <thead>
               <tr>
-                <th>Name</th><th>Grade</th><th>Seizure Type</th><th>Emergency Contact</th><th>Status</th><th></th>
+                <th>Name</th><th>Grade</th><th>School</th><th>Seizure Type</th><th>Status</th><th></th>
               </tr>
             </thead>
             <tbody>
               {learners.map(l => (
                 <tr key={l.id}>
                   <td><strong>{l.full_name}</strong></td>
-                  <td>{l.grade} {l.class}</td>
+                  <td>{l.grade}</td>
+                  <td>{l.emergency_contact_phone || '—'}</td>
                   <td>{l.seizure_type || '—'}</td>
-                  <td>{l.emergency_contact_name}<br /><small style={{ color: '#888' }}>{l.emergency_contact_phone}</small></td>
                   <td><span className={badgeClass(l.status)}>{l.status}</span></td>
                   <td><button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => deleteLearner(l.id)}>Remove</button></td>
                 </tr>
