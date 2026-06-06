@@ -31,9 +31,9 @@ function Landing({ onEnter }) {
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ fontSize: '72px', marginBottom: '16px', filter: 'drop-shadow(0 0 20px rgba(62,207,142,0.8))' }}>🧠</div>
-        <h1 style={{ color: 'white', fontSize: '48px', fontWeight: '700', marginBottom: '8px', textShadow: '0 0 40px rgba(62,207,142,0.4)' }}>EpiSafe School</h1>
-        <p style={{ color: '#3ECF8E', fontSize: '18px', marginBottom: '48px', fontWeight: '500', letterSpacing: '0.05em' }}>Epilepsy management for Mauritian schools</p>
-
+        <h1 style={{ color: 'white', fontSize: '48px', fontWeight: '700', marginBottom: '12px', textShadow: '0 0 40px rgba(62,207,142,0.4)' }}>EpiSafe School</h1>
+<div style={{ width: '80px', height: '3px', background: 'linear-gradient(90deg, #3ECF8E, transparent)', borderRadius: '2px', margin: '0 auto 12px' }} />
+<p style={{ color: '#3ECF8E', fontSize: '18px', marginBottom: '48px', fontWeight: '500', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Epilepsy management for Mauritian schools</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '820px', marginBottom: '48px' }}>
           {[
             { icon: '📋', title: 'Seizure Risk Screener', desc: 'Identify learners who may be at risk with a structured screening tool' },
