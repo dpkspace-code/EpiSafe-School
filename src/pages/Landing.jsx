@@ -2,25 +2,31 @@ function Landing({ onEnter }) {
   return (
     <div style={{
       minHeight: '100vh',
+      width: '100%',
       background: 'radial-gradient(ellipse at 20% 50%, #0f3460 0%, #0a0a1a 50%, #1a0a2e 100%)',
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', padding: '40px 20px', textAlign: 'center',
-      position: 'relative', overflow: 'hidden'
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '80px 20px 60px 20px',
+      textAlign: 'center',
+      position: 'relative',
+      overflow: 'hidden',
+      boxSizing: 'border-box',
     }}>
 
       {/* Decorative circles */}
       <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(62,207,142,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '-100px', left: '-100px', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(24,95,165,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', top: '30%', left: '5%', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(62,207,142,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
       {/* Floating dots */}
       {[...Array(20)].map((_, i) => (
         <div key={i} style={{
           position: 'absolute',
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          width: `${Math.random() * 4 + 2}px`,
-          height: `${Math.random() * 4 + 2}px`,
+          left: `${5 + (i * 37) % 90}%`,
+          top: `${5 + (i * 53) % 90}%`,
+          width: `${2 + (i % 3)}px`,
+          height: `${2 + (i % 3)}px`,
           borderRadius: '50%',
           background: i % 2 === 0 ? 'rgba(62,207,142,0.6)' : 'rgba(100,180,255,0.4)',
           pointerEvents: 'none',
@@ -29,12 +35,15 @@ function Landing({ onEnter }) {
       ))}
 
       {/* Content */}
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '900px' }}>
+
         <div style={{ fontSize: '72px', marginBottom: '16px', filter: 'drop-shadow(0 0 20px rgba(62,207,142,0.8))' }}>🧠</div>
-        <h1 style={{ color: 'white', fontSize: '48px', fontWeight: '700', marginBottom: '12px', textShadow: '0 0 40px rgba(62,207,142,0.4)' }}>EpiSafe School</h1>
-<div style={{ width: '80px', height: '3px', background: 'linear-gradient(90deg, #3ECF8E, transparent)', borderRadius: '2px', margin: '0 auto 12px' }} />
-<p style={{ color: '#3ECF8E', fontSize: '18px', marginBottom: '48px', fontWeight: '500', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Epilepsy management for Mauritian schools</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '820px', marginBottom: '48px' }}>
+        <h1 style={{ color: 'white', fontSize: '48px', fontWeight: '700', marginBottom: '8px', textShadow: '0 0 40px rgba(62,207,142,0.4)' }}>EpiSafe School</h1>
+        <div style={{ width: '80px', height: '3px', background: 'linear-gradient(90deg, #3ECF8E, transparent)', borderRadius: '2px', margin: '0 auto 12px' }} />
+        <p style={{ color: '#3ECF8E', fontSize: '18px', marginBottom: '48px', fontWeight: '500', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Epilepsy management for Mauritian schools</p>
+
+        {/* Feature cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '48px' }}>
           {[
             { icon: '📋', title: 'Seizure Risk Screener', desc: 'Identify learners who may be at risk with a structured screening tool' },
             { icon: '👥', title: 'Learner Registry', desc: 'Maintain a secure database of epilepsy cases with personalised action plans' },
@@ -48,6 +57,7 @@ function Landing({ onEnter }) {
           ))}
         </div>
 
+        {/* Badge pills */}
         <div style={{ display: 'flex', gap: '12px', marginBottom: '40px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {[
             '🇲🇺 Designed for Mauritius',
@@ -61,12 +71,14 @@ function Landing({ onEnter }) {
           ))}
         </div>
 
+        {/* Get started button */}
         <button onClick={onEnter} style={{ background: 'linear-gradient(135deg, #3ECF8E, #2db87a)', color: 'white', border: 'none', borderRadius: '14px', padding: '16px 52px', fontSize: '18px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 0 30px rgba(62,207,142,0.4)', marginBottom: '12px' }}>
           Get Started →
         </button>
         <p style={{ color: '#567', fontSize: '13px', marginBottom: '60px' }}>Login or create an account to continue</p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', maxWidth: '500px' }}>
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', maxWidth: '500px', margin: '0 auto' }}>
           {[
             { num: '176+', label: 'Secondary schools in Mauritius' },
             { num: '1 in 100', label: 'People live with epilepsy' },
@@ -78,6 +90,7 @@ function Landing({ onEnter }) {
             </div>
           ))}
         </div>
+
       </div>
     </div>
   )
