@@ -2,17 +2,9 @@ import { useState } from 'react'
 import { supabase } from '../supabase'
 
 const staffTypes = [
-  'Teacher',
-  'Head of Department',
-  'Deputy Rector',
-  'Rector',
-  'Administrative Staff',
-  'Library Staff',
-  'Laboratory Technician',
-  'Cleaner',
-  'Security Officer',
-  'Canteen Staff',
-  'Other Support Staff',
+  'Teacher', 'Head of Department', 'Deputy Rector', 'Rector',
+  'Administrative Staff', 'Library Staff', 'Laboratory Technician',
+  'Cleaner', 'Security Officer', 'Canteen Staff', 'Other Support Staff',
 ]
 
 const departments = [
@@ -59,12 +51,13 @@ function calcRiskLevel(answers) {
   return { level: 'Low', score }
 }
 
-function StaffRegister({ session, onLogout }) {
+function StaffRegister({ onLogout }) {
   const [step, setStep] = useState(1)
   const [screenAnswers, setScreenAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [riskResult, setRiskResult] = useState(null)
   const [form, setForm] = useState({
     full_name: '', staff_type: '', department: '',
     seizure_type: '', medication: '',
@@ -94,34 +87,43 @@ function StaffRegister({ session, onLogout }) {
       risk_score: score,
       status: level === 'High' || level === 'Moderate' ? 'review' : 'pending',
     }])
-    if (dbError) setError('Error: ' + dbError.message)
-    else setSubmitted(true)
-    setSaving(false)
+    if (dbError) {
+      setError('Error: ' + dbError.message)
+      setSaving(false)
+    } else {
+      setRiskResult({ level, score })
+      setSubmitted(true)
+      setSaving(false)
+    }
   }
 
   const steps = ['Personal Details', 'Medical Info', 'Health Screening', 'Emergency Contact']
+  const colors = { High: '#ff4d4f', Moderate: '#fa8c16', 'Low-Moderate': '#fadb14', Low: '#3ECF8E' }
+  const emojis = { High: '🔴', Moderate: '🟠', 'Low-Moderate': '🟡', Low: '🟢' }
 
-  if (submitted) {
-    const { level } = calcRiskLevel(screenAnswers)
-    const colors = { High: '#ff4d4f', Moderate: '#fa8c16', 'Low-Moderate': '#fadb14', Low: '#3ECF8E' }
-    const emojis = { High: '🔴', Moderate: '🟠', 'Low-Moderate': '🟡', Low: '🟢' }
+  if (submitted && riskResult) {
     return (
-      <div style={{ minHeight: '100vh', background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ background: 'white', borderRadius: '16px', padding: '40px', maxWidth: '480px', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+      <div style={{ minHeight: '100vh', background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div style={{ background: 'white', borderRadius: '16px', padding: '40px', maxWidth: '480px', width: '100%', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>✅</div>
           <h2 style={{ color: '#1a1a2e', marginBottom: '12px' }}>Registration Complete!</h2>
           <p style={{ color: '#666', lineHeight: '1.7', marginBottom: '20px' }}>
             Thank you for registering. Your information has been securely submitted to the school health team.
           </p>
-          {level !== 'Low' && (
+          {riskResult.level !== 'Low' && (
             <div style={{ background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
-              <div style={{ fontSize: '24px', marginBottom: '6px' }}>{emojis[level]}</div>
-              <p style={{ fontSize: '13px', color: colors[level], fontWeight: '600' }}>
-                {level} Risk Detected — A health team member will follow up with you shortly.
+              <div style={{ fontSize: '24px', marginBottom: '6px' }}>{emojis[riskResult.level]}</div>
+              <p style={{ fontSize: '13px', color: colors[riskResult.level], fontWeight: '600' }}>
+                {riskResult.level} Risk Detected — A health team member will follow up with you shortly.
               </p>
             </div>
           )}
-          <button className="btn btn-primary" onClick={onLogout}>Done</button>
+          <p style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>
+            You may now logout or close this page.
+          </p>
+          <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => window.location.href = '/'}>
+            🚪 Logout
+          </button>
         </div>
       </div>
     )
@@ -136,7 +138,6 @@ function StaffRegister({ session, onLogout }) {
           <p style={{ color: '#888', fontSize: '13px' }}>Your information is confidential and secure</p>
         </div>
 
-        {/* Step indicator */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
           {steps.map((s, i) => (
             <div key={i} style={{ flex: 1, textAlign: 'center' }}>
@@ -148,7 +149,6 @@ function StaffRegister({ session, onLogout }) {
 
         {error && <div style={{ background: '#fff1f0', color: '#ff4d4f', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>{error}</div>}
 
-        {/* STEP 1 — Personal Details */}
         {step === 1 && (
           <div className="card">
             <h2 style={{ marginBottom: '16px' }}>👤 Personal Details</h2>
@@ -179,7 +179,6 @@ function StaffRegister({ session, onLogout }) {
           </div>
         )}
 
-        {/* STEP 2 — Medical Info */}
         {step === 2 && (
           <div className="card">
             <h2 style={{ marginBottom: '16px' }}>🏥 Medical Information</h2>
@@ -209,7 +208,6 @@ function StaffRegister({ session, onLogout }) {
           </div>
         )}
 
-        {/* STEP 3 — Health Screening */}
         {step === 3 && (
           <div className="card">
             <h2 style={{ marginBottom: '4px' }}>📋 Health Screening</h2>
@@ -236,7 +234,6 @@ function StaffRegister({ session, onLogout }) {
           </div>
         )}
 
-        {/* STEP 4 — Emergency Contact */}
         {step === 4 && (
           <div className="card">
             <h2 style={{ marginBottom: '16px' }}>🆘 Emergency Contact</h2>
@@ -262,7 +259,7 @@ function StaffRegister({ session, onLogout }) {
           </div>
         )}
 
-        <button onClick={onLogout} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '13px', marginTop: '8px' }}>
+        <button onClick={() => window.location.href = '/'} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '13px', marginTop: '8px' }}>
           Logout
         </button>
       </div>

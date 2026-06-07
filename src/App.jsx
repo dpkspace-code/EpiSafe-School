@@ -7,6 +7,8 @@ import Registry from './pages/Registry'
 import Screener from './pages/Screener'
 import Guides from './pages/Guides'
 import SelfRegister from './pages/SelfRegister'
+import StaffRegister from './pages/StaffRegister'
+import StaffRegistry from './pages/StaffRegistry'
 import Pending from './pages/Pending'
 import './App.css'
 
@@ -38,11 +40,11 @@ function App() {
   }, [userRole])
 
   async function fetchPendingCount() {
-    const { count } = await supabase
-      .from('learners')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending')
-    setPendingCount(count || 0)
+    const { count: lCount } = await supabase
+      .from('learners').select('*', { count: 'exact', head: true }).eq('status', 'pending')
+    const { count: sCount } = await supabase
+      .from('staff_registry').select('*', { count: 'exact', head: true }).eq('status', 'pending')
+    setPendingCount((lCount || 0) + (sCount || 0))
   }
 
   async function handleLogout() {
@@ -66,6 +68,7 @@ function App() {
   })} />
 
   if (userRole === 'learner') return <SelfRegister session={session} onLogout={handleLogout} />
+  if (userRole === 'staff') return <StaffRegister session={session} onLogout={handleLogout} />
 
   return (
     <div className="app">
@@ -77,9 +80,11 @@ function App() {
         <nav>
           <button className={page === 'dashboard' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('dashboard')}>📊 Dashboard</button>
           <button className={page === 'screener' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('screener')}>📋 Screener</button>
-          <button className={page === 'registry' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('registry')}>👥 Registry</button>
+          <button className={page === 'registry' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('registry')}>👥 Learners</button>
+          <button className={page === 'staffregistry' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('staffregistry')}>👨‍🏫 Staff</button>
           <button className={page === 'guides' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('guides')}>📖 Guides</button>
-          <button className={page === 'pending' ? 'nav-btn active' : 'nav-btn'} onClick={() => { setPage('pending'); fetchPendingCount() }}
+          <button className={page === 'pending' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => { setPage('pending'); fetchPendingCount() }}
             style={{ color: pendingCount > 0 ? '#fa8c16' : '' }}>
             ⏳ Pending {pendingCount > 0 ? `(${pendingCount})` : ''}
           </button>
@@ -94,6 +99,7 @@ function App() {
         {page === 'dashboard' && <Dashboard setPage={setPage} />}
         {page === 'screener' && <Screener />}
         {page === 'registry' && <Registry />}
+        {page === 'staffregistry' && <StaffRegistry />}
         {page === 'guides' && <Guides />}
         {page === 'pending' && <Pending />}
       </div>
