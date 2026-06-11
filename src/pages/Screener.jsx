@@ -110,7 +110,7 @@ function Screener() {
       grade,
       emergency_contact_name: parentName,
       emergency_contact_phone: parentPhone,
-      status: 'review',
+      status: 'pending',
       action_plan: result.level,
     }])
     if (error) alert('Error: ' + error.message)

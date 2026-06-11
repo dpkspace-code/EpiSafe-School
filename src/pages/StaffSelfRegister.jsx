@@ -22,37 +22,31 @@ const medications = [
   'Unknown',
 ]
 
-const triggerOptions = [
-  'Stress and anxiety',
-  'Sleep deprivation',
-  'Flashing or flickering lights',
-  'Missed medication',
-  'Fever or illness',
-  'Dehydration or skipped meals',
-  'Overheating or physical exhaustion',
-  'Hormonal changes',
-  'Multiple triggers',
-  'Unknown triggers',
+const staffTypes = ['Teacher', 'Support Staff', 'Attendants', 'Administrative Staff']
+
+const departments = [
+  // Academic subjects
+  'English', 'French', 'Mathematics', 'Sciences (Biology/Physics/Chemistry)',
+  'History & Geography', 'Economics', 'Accounting / Business Studies',
+  'Computer Science / IT', 'Art & Design', 'Music', 'Physical Education (PE)',
+  'Hindi / Asian Languages', 'Literature in English',
+  // Functional areas
+  'Administration', 'Library', 'Canteen', 'Health Office / Sick Bay',
+  'Security', 'Maintenance / Facilities', 'Counselling / Welfare',
+  'Laboratory (Lab Technician)', 'Other',
 ]
 
-const grades = ['Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12','Grade 13']
-
-const schoolsByZone = {
-  'Zone 1': ['Adolphe de Plevitz SSS','James Burty David SSS','Droopnath Ramphul State College','Frank Richard SSS','Goodlands SSS','Lady Sushil Ramgoolam SSS','Pailles SSS','Pamplemousses SSS','Piton SC','Port Louis North SSS','Port Louis SSS','G. M. Dawjee Atchia State College','Prof. Hassan Raffa SSS','Rabindranath Tagore SSS','Ramsoondur Prayag SSS','R. Seeneevassen SSS','Riviere du Rempart SSS','Royal College Port Louis','Sharma Jugdambi SSS','Shri Beekrumsingh Ramlallah SSS','Sir A. R. Mohamed SSS','Terre Rouge SSS','Triolet SSS','Alpha College','Bhujoharry College','BPS Fatima College','Bradley College','College Ideal','College Pere Laval','Cosmopolitain College','DAV HSC College','DAV College','Labourdonnais College','Friendship College (Boys)','Friendship College (Girls)','International College','Islamic Cultural College','Islamic Cultural Form VI College','London College','Loreto College Port Louis','Madad Ul Islam Girls College','Merton College','Muslim Girls College','Pamplemousses High School','Port Louis High School','S Munrakhun College',"Saint Bartholomew's College",'Universal College'],
-  'Zone 2': ['Beau Bassin SSS','Bel Air Riviere Seche SSS','Bon Accueil State College','Camp de Masque State College','Ebene SSS (Boys)','Ebene SSS (Girls)','John Kennedy College','Mahatma Gandhi Institute','Mahatma Gandhi SS Centre de Flacq','Mahatma Gandhi SS Moka','Manilall Doctor SSS','Marcel Cabon SSS','Quartier Militaire SSS','Queen Elizabeth College','Rajcoomar Gujadhur SSS','Sebastopol SSS','Shrimati Indira Gandhi SSS','Sir Leckraz Teelock SSS','Byron College','La Confiance College','College des Ville Soeurs','Loreto College Rose Hill','Rose Hill Muslim College','Royal College Curepipe','Royal College Beau Bassin',"St Andrew's College",'St Joseph College',"St Mary's College",'Vieux Grand Port SSS','Sodnac SSS'],
-  'Zone 3': ['Curepipe College','Bel Ombre SSS','Chemin Grenier SSS','Henrietta SSS','Mahebourg SSS',"Mare d'Albert SSS",'New Eben Ezer SSS','Phoenix SSS','Plaine Magnien SSS','Riviere des Anguilles State College','Rose Belle SSS','Sookdeo Bissoondoyal State College','Stanley College','Surinam SSS','Tyack SSS','Wooton SSS','Loreto College Curepipe','St Gabriel College','St Esprit College','Sodnac College','Nouvelle France College','Savanne College','Grand Bois College'],
-  'Zone 4': ['Bambous SSS','Cascades SSS','Ecole du Centre SSS','Floreal SSS','Forest Side SSS','Quatre Bornes SSS','Royal College Rose Hill','Vacoas SSS','Highlands College','Belle Rose SSS','Tamarin SSS','Black River SSS','Flic en Flac SSS','Petite Riviere SSS','Dr Regis Chaperon SSS','Loreto College Quatre Bornes','St Andrews College','Clavis College','Savannah College'],
-}
-
 const screeningQuestions = [
-  { id: 'sq1', text: 'Have you ever had a seizure or convulsion?', options: ['Never', 'Once', '2-5 times', 'More than 5 times'], weights: [0, 3, 5, 7] },
+  { id: 'sq1', text: 'Have you ever had a seizure or convulsion as an adult?', options: ['Never', 'Once', '2-5 times', 'More than 5 times'], weights: [0, 3, 5, 7] },
   { id: 'sq2', text: 'Have you been diagnosed with epilepsy by a doctor?', options: ['No', 'Under investigation', 'Yes — recently', 'Yes — long standing'], weights: [0, 3, 5, 6] },
   { id: 'sq3', text: 'Does any parent or sibling have epilepsy?', options: ['No', 'Not sure', 'Yes — one relative', 'Yes — more than one'], weights: [0, 1, 3, 5] },
-  { id: 'sq4', text: 'Have you ever had a fever-related convulsion?', options: ['No', 'Once', 'More than once'], weights: [0, 2, 4] },
-  { id: 'sq5', text: 'Have you had a significant head injury or brain surgery?', options: ['No', 'Minor injury', 'Significant injury', 'Brain surgery'], weights: [0, 1, 4, 6] },
-  { id: 'sq6', text: 'Do you experience blank staring or confusion episodes?', options: ['Never', 'Rarely', 'Sometimes', 'Frequently'], weights: [0, 2, 4, 6] },
-  { id: 'sq7', text: 'Are you currently on anti-epileptic medication?', options: ['No', 'Yes — controls well', 'Yes — still having seizures', 'Was on medication, stopped'], weights: [0, 2, 5, 6] },
-  { id: 'sq8', text: 'Have you ever had a seizure at school?', options: ['Never', 'Once', 'More than once'], weights: [0, 4, 7] },
+  { id: 'sq4', text: 'Have you had a significant head injury, stroke, or brain surgery?', options: ['No', 'Minor injury', 'Significant injury', 'Stroke / brain surgery'], weights: [0, 1, 4, 6] },
+  { id: 'sq5', text: 'Do you experience blank staring, confusion, or "zoning out" episodes?', options: ['Never', 'Rarely', 'Sometimes', 'Frequently'], weights: [0, 2, 4, 6] },
+  { id: 'sq6', text: 'Are you currently on anti-epileptic or anti-seizure medication?', options: ['No', 'Yes — controls well', 'Yes — still having seizures', 'Was on medication, stopped'], weights: [0, 2, 5, 6] },
+  { id: 'sq7', text: 'Have you ever had a seizure while at work or driving?', options: ['Never', 'Once', 'More than once'], weights: [0, 4, 7] },
+  { id: 'sq8', text: 'How would you describe your sleep quality and routine?', options: ['Generally good and consistent', 'Occasionally disrupted', 'Frequently disrupted (shift work, insomnia)', 'Severely disrupted / chronic sleep deprivation'], weights: [0, 1, 3, 5] },
+  { id: 'sq9', text: 'How would you rate your current stress levels?', options: ['Low', 'Moderate', 'High', 'Very high / overwhelming'], weights: [0, 1, 3, 5] },
+  { id: 'sq10', text: 'Do you have any other neurological or chronic medical conditions?', options: ['No', 'Not sure', 'Yes — managed', 'Yes — unmanaged or unstable'], weights: [0, 1, 3, 5] },
 ]
 
 const totalMaxScore = screeningQuestions.reduce((sum, q) => sum + Math.max(...q.weights), 0)
@@ -66,21 +60,20 @@ function calcRiskLevel(answers) {
   return { level: 'Low', score }
 }
 
-function SelfRegister({ session, onLogout }) {
+function StaffSelfRegister({ session, onLogout }) {
   const [step, setStep] = useState(1) // 1=personal, 2=medical, 3=screening, 4=emergency
-  const [selectedZone, setSelectedZone] = useState('')
   const [screenAnswers, setScreenAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
-    full_name: '', grade: '', class: '', has_seizures: '', seizure_type: '',
-    medication: '', triggers: '', emergency_contact_name: '',
-    emergency_contact_phone: '', emergency_contact_email: '', action_plan: '', status: 'pending'
+    full_name: '', staff_type: session?.user?.user_metadata?.staff_type || '', department: '',
+    has_seizures: '', seizure_type: '', medication: '',
+    emergency_contact_name: '', emergency_contact_phone: '',
+    emergency_contact_email: '', status: 'pending'
   })
 
   const selectedSeizure = seizureTypes.find(s => s.value === form.seizure_type)
-  const schoolList = selectedZone ? schoolsByZone[selectedZone] : []
 
   function setScreenAnswer(id, optionIndex, weight) {
     setScreenAnswers(prev => ({ ...prev, [id]: { index: optionIndex, weight } }))
@@ -90,22 +83,16 @@ function SelfRegister({ session, onLogout }) {
 
   async function handleSubmit() {
     if (!form.full_name) return setError('Please enter your full name')
-    if (!form.grade) return setError('Please select your grade')
+    if (!form.staff_type) return setError('Please select your staff type')
     setSaving(true)
     const { level, score } = calcRiskLevel(screenAnswers)
     const finalForm = {
       ...form,
-      action_plan: level,
-      status: level === 'High' || level === 'Moderate' ? 'review' : 'pending',
-    }
-    const { error: dbError } = await supabase.from('learners').insert([finalForm])
-    await supabase.from('screener_responses').insert([{
-      learner_name: form.full_name,
-      grade: form.grade,
-      answers: JSON.stringify(screenAnswers),
-      risk_score: score,
       risk_level: level,
-    }])
+      risk_score: score,
+      status: 'pending',
+    }
+    const { error: dbError } = await supabase.from('staff_registry').insert([finalForm])
     if (dbError) setError('Error: ' + dbError.message)
     else setSubmitted(true)
     setSaving(false)
@@ -129,7 +116,7 @@ function SelfRegister({ session, onLogout }) {
             <div style={{ background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
               <div style={{ fontSize: '24px', marginBottom: '6px' }}>{emojis[level]}</div>
               <p style={{ fontSize: '13px', color: colors[level], fontWeight: '600' }}>
-                {level} Risk Detected — A staff member will follow up with you shortly.
+                {level} Risk Detected — A staff member from health team will follow up with you shortly.
               </p>
             </div>
           )}
@@ -146,7 +133,7 @@ function SelfRegister({ session, onLogout }) {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <div style={{ fontSize: '36px' }}>🧠</div>
-          <h1 style={{ color: '#1a1a2e', fontSize: '20px', marginBottom: '4px' }}>EpiSafe — Learner Registration</h1>
+          <h1 style={{ color: '#1a1a2e', fontSize: '20px', marginBottom: '4px' }}>EpiSafe — Staff Registration</h1>
           <p style={{ color: '#888', fontSize: '13px' }}>Your information is confidential and secure</p>
         </div>
 
@@ -177,40 +164,22 @@ function SelfRegister({ session, onLogout }) {
                 <input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} placeholder="Your full name" />
               </div>
               <div className="form-group">
-                <label>Gender</label>
-                <select value={form.class} onChange={e => setForm({ ...form, class: e.target.value })}>
-                  <option value="">-- Select --</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Grade *</label>
-                <select value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })}>
-                  <option value="">-- Select grade --</option>
-                  {grades.map(g => <option key={g} value={g}>{g}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Zone</label>
-                <select value={selectedZone} onChange={e => setSelectedZone(e.target.value)}>
-                  <option value="">-- Select zone --</option>
-                  <option value="Zone 1">Zone 1 — Port Louis & North</option>
-                  <option value="Zone 2">Zone 2 — East & Central</option>
-                  <option value="Zone 3">Zone 3 — South & South East</option>
-                  <option value="Zone 4">Zone 4 — West & Highlands</option>
+                <label>Staff Type *</label>
+                <select value={form.staff_type} onChange={e => setForm({ ...form, staff_type: e.target.value })}>
+                  <option value="">-- Select staff type --</option>
+                  {staffTypes.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label>School Name</label>
-                <select value={form.triggers} onChange={e => setForm({ ...form, triggers: e.target.value })} disabled={!selectedZone}>
-                  <option value="">{selectedZone ? '-- Select school --' : '-- Select zone first --'}</option>
-                  {schoolList.map(s => <option key={s} value={s}>{s}</option>)}
+                <label>Department / Subject (optional)</label>
+                <select value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}>
+                  <option value="">-- Select department --</option>
+                  {departments.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
             </div>
             <button className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }}
-              onClick={() => { if (!form.full_name || !form.grade) return setError('Please fill in name and grade'); setError(''); setStep(2) }}>
+              onClick={() => { if (!form.full_name || !form.staff_type) return setError('Please fill in name and staff type'); setError(''); setStep(2) }}>
               Next →
             </button>
           </div>
@@ -275,7 +244,7 @@ function SelfRegister({ session, onLogout }) {
         {step === 3 && (
           <div className="card">
             <h2 style={{ marginBottom: '4px' }}>📋 Health Screening</h2>
-            <p style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>Answer honestly — this helps identify if you need health support at school.</p>
+            <p style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>Answer honestly — this helps the school health team support you appropriately.</p>
             {screeningQuestions.map((q, i) => (
               <div key={q.id} style={{ marginBottom: '14px', padding: '12px', background: screenAnswers[q.id] !== undefined ? '#f9fffe' : '#f9f9f9', borderRadius: '8px', border: screenAnswers[q.id] !== undefined ? '1px solid #3ECF8E' : '1px solid #eee' }}>
                 <p style={{ fontSize: '13px', color: '#333', marginBottom: '8px', fontWeight: '500' }}>{i + 1}. {q.text}</p>
@@ -304,7 +273,7 @@ function SelfRegister({ session, onLogout }) {
             <h2 style={{ marginBottom: '16px' }}>🆘 Emergency Contact</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
               <div className="form-group">
-                <label>Parent/Guardian Name</label>
+                <label>Emergency Contact Name</label>
                 <input value={form.emergency_contact_name} onChange={e => setForm({ ...form, emergency_contact_name: e.target.value })} placeholder="Full name" />
               </div>
               <div className="form-group">
@@ -313,7 +282,7 @@ function SelfRegister({ session, onLogout }) {
               </div>
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label>Email Address (optional)</label>
-                <input type="email" value={form.emergency_contact_email} onChange={e => setForm({ ...form, emergency_contact_email: e.target.value })} placeholder="parent@example.com" />
+                <input type="email" value={form.emergency_contact_email} onChange={e => setForm({ ...form, emergency_contact_email: e.target.value })} placeholder="contact@example.com" />
               </div>
             </div>
             <div style={{ background: '#e6fff5', border: '1px solid #3ECF8E', borderRadius: '10px', padding: '12px', marginBottom: '16px', fontSize: '12px', color: '#0F6E56' }}>
@@ -336,4 +305,4 @@ function SelfRegister({ session, onLogout }) {
   )
 }
 
-export default SelfRegister
+export default StaffSelfRegister

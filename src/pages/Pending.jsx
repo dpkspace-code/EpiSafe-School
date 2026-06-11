@@ -8,6 +8,7 @@ const rejectionReasons = [
   'Not a registered learner at this school',
   'Parental consent required — please contact the school health team',
   'Medical details require further clarification — please visit the school health office',
+  'Learner runs no risk and is Episafe — no further action needed',
 ]
 
 function Pending() {
@@ -49,13 +50,30 @@ function Pending() {
     fetchPending()
   }
 
+  function dismissApproved(id) {
+    setApproved(prev => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }
+
+  function dismissRejected(id) {
+    setRejected(prev => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }
+
   function sendWhatsApp(learner, message) {
     const phone = learner.emergency_contact_phone?.replace(/\s/g, '')
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
   }
 
   function sendEmail(learner, subject, message) {
-    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank')
+    const to = learner.emergency_contact_email || ''
+    window.open(`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank')
   }
 
   function approvalMessage(l) {
@@ -112,7 +130,7 @@ function Pending() {
         <div className="card" style={{ background: '#e6fff5', border: '1px solid #3ECF8E', marginBottom: '16px' }}>
           <h2 style={{ color: '#0F6E56', marginBottom: '12px' }}>✅ Recently Approved — Send Notification</h2>
           {Object.values(approved).map(l => (
-            <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(62,207,142,0.2)' }}>
+            <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(62,207,142,0.2)', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <div style={{ fontWeight: '600', color: '#1a1a2e', fontSize: '14px' }}>{l.full_name}</div>
                 <div style={{ fontSize: '12px', color: '#666' }}>{l.emergency_contact_name} · {l.emergency_contact_phone}</div>
@@ -126,6 +144,10 @@ function Pending() {
                   onClick={() => sendEmail(l, `EpiSafe Registration Approved — ${l.full_name}`, approvalMessage(l))}>
                   📧 Email
                 </button>
+                <button className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: '12px' }}
+                  onClick={() => dismissApproved(l.id)}>
+                  ✖️ Don't send
+                </button>
               </div>
             </div>
           ))}
@@ -137,7 +159,7 @@ function Pending() {
         <div className="card" style={{ background: '#fff1f0', border: '1px solid #ffccc7', marginBottom: '16px' }}>
           <h2 style={{ color: '#A32D2D', marginBottom: '12px' }}>❌ Recently Rejected — Send Notification</h2>
           {Object.values(rejected).map(l => (
-            <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,77,79,0.15)' }}>
+            <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,77,79,0.15)', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <div style={{ fontWeight: '600', color: '#1a1a2e', fontSize: '14px' }}>{l.full_name}</div>
                 <div style={{ fontSize: '12px', color: '#666' }}>{l.emergency_contact_name} · {l.emergency_contact_phone}</div>
@@ -151,6 +173,10 @@ function Pending() {
                 <button className="btn" style={{ background: '#4096ff', color: 'white', padding: '8px 14px', fontSize: '12px' }}
                   onClick={() => sendEmail(l, `EpiSafe Registration Update — ${l.full_name}`, rejectionMessage(l, l.reason))}>
                   📧 Email
+                </button>
+                <button className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: '12px' }}
+                  onClick={() => dismissRejected(l.id)}>
+                  ✖️ Don't send
                 </button>
               </div>
             </div>

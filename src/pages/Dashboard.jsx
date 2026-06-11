@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 
-function Dashboard({ setPage }) {
+function Dashboard() {
+  const navigate = useNavigate()
   const [learnerCount, setLearnerCount] = useState(0)
   const [screeningCount, setScreeningCount] = useState(0)
   const [highRiskCount, setHighRiskCount] = useState(0)
@@ -107,7 +109,7 @@ function Dashboard({ setPage }) {
                 <strong>{pendingCount}</strong> learner{pendingCount > 1 ? 's' : ''} waiting for your review and approval
               </p>
             </div>
-            <button className="btn btn-primary" onClick={() => setPage('pending')}>
+            <button className="btn btn-primary" onClick={() => navigate('/app/pending')}>
               Review Now →
             </button>
           </div>
@@ -122,10 +124,10 @@ function Dashboard({ setPage }) {
       <div className="card">
         <h2>Quick Actions</h2>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={() => setPage('screener')}>📋 New Screening</button>
-          <button className="btn btn-primary" onClick={() => setPage('registry')}>➕ Add Learner</button>
-          <button className="btn btn-secondary" onClick={() => setPage('guides')}>📖 View Guides</button>
-          {pendingCount > 0 && <button className="btn" style={{ background: '#ffe58f', color: '#854F0B' }} onClick={() => setPage('pending')}>⏳ Pending ({pendingCount})</button>}
+          <button className="btn btn-primary" onClick={() => navigate('/app/screener')}>📋 New Screening</button>
+          <button className="btn btn-primary" onClick={() => navigate('/app/registry')}>➕ Add Learner</button>
+          <button className="btn btn-secondary" onClick={() => navigate('/app/guides')}>📖 View Guides</button>
+          {pendingCount > 0 && <button className="btn" style={{ background: '#ffe58f', color: '#854F0B' }} onClick={() => navigate('/app/pending')}>⏳ Pending ({pendingCount})</button>}
         </div>
       </div>
 

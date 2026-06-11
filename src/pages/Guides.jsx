@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 
 const guides = [
   { id: 1, title: '🚨 Seizure First Aid', summary: 'Step-by-step response during a seizure', color: '#e6fff5', steps: ['Stay calm and stay with the learner throughout the seizure.','Note the exact time the seizure starts.','Clear the area of hard or sharp objects that could cause injury.','Gently cushion the learner\'s head with something soft.','Do NOT restrain the learner — let the seizure run its course.','Place the learner in the recovery position once convulsions stop.','Talk calmly and reassure the learner when they regain awareness.','Record duration, type of movements, and anything unusual.'] },
@@ -11,9 +12,19 @@ const guides = [
 
 function Guides() {
   const [selected, setSelected] = useState(null)
+  const location = useLocation()
+
+  // Reset to guide list whenever this page is freshly navigated to
+  useEffect(() => {
+    setSelected(null)
+  }, [location.key])
 
   if (selected) {
-    const guide = guides.find(g => g.id === selected)
+    const currentIndex = guides.findIndex(g => g.id === selected)
+    const guide = guides[currentIndex]
+    const prevGuide = guides[currentIndex - 1]
+    const nextGuide = guides[currentIndex + 1]
+
     return (
       <div>
         <button className="btn btn-secondary" style={{ marginBottom: '20px' }} onClick={() => setSelected(null)}>← Back to Guides</button>
@@ -27,6 +38,25 @@ function Guides() {
             </div>
           ))}
         </div>
+
+        {/* Prev/Next navigation */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', gap: '12px', marginTop: '16px' }}>
+          {prevGuide ? (
+            <button className="btn btn-secondary" style={{ flex: 1, textAlign: 'left' }} onClick={() => setSelected(prevGuide.id)}>
+              ← {prevGuide.title}
+            </button>
+          ) : <div style={{ flex: 1 }} />}
+
+          {nextGuide ? (
+            <button className="btn btn-primary" style={{ flex: 1, textAlign: 'right' }} onClick={() => setSelected(nextGuide.id)}>
+              {nextGuide.title} →
+            </button>
+          ) : <div style={{ flex: 1 }} />}
+        </div>
+
+        <p style={{ textAlign: 'center', color: '#aaa', fontSize: '12px', marginTop: '12px' }}>
+          Guide {currentIndex + 1} of {guides.length}
+        </p>
       </div>
     )
   }

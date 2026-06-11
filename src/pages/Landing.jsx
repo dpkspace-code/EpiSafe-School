@@ -1,4 +1,8 @@
-function Landing({ onEnter }) {
+import { useNavigate } from 'react-router-dom'
+
+function Landing() {
+  const navigate = useNavigate()
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -49,7 +53,13 @@ function Landing({ onEnter }) {
             { icon: '👥', title: 'Learner Registry', desc: 'Maintain a secure database of epilepsy cases with personalised action plans' },
             { icon: '📖', title: 'Staff Guides', desc: 'Equip all staff with clear, simple guides on seizure first aid and prevention' },
           ].map((f, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '16px', padding: '28px 20px', border: '1px solid rgba(62,207,142,0.25)' }}>
+            <div
+              key={i}
+              onClick={() => navigate('/login')}
+              style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '16px', padding: '28px 20px', border: '1px solid rgba(62,207,142,0.25)', cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(62,207,142,0.6)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(62,207,142,0.25)'; e.currentTarget.style.transform = 'translateY(0)' }}
+            >
               <div style={{ fontSize: '36px', marginBottom: '12px' }}>{f.icon}</div>
               <h3 style={{ color: 'white', fontSize: '15px', marginBottom: '8px', fontWeight: '600' }}>{f.title}</h3>
               <p style={{ color: '#9ab', fontSize: '13px', lineHeight: '1.6' }}>{f.desc}</p>
@@ -72,7 +82,7 @@ function Landing({ onEnter }) {
         </div>
 
         {/* Get started button */}
-        <button onClick={onEnter} style={{ background: 'linear-gradient(135deg, #3ECF8E, #2db87a)', color: 'white', border: 'none', borderRadius: '14px', padding: '16px 52px', fontSize: '18px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 0 30px rgba(62,207,142,0.4)', marginBottom: '12px' }}>
+        <button onClick={() => navigate('/login')} style={{ background: 'linear-gradient(135deg, #3ECF8E, #2db87a)', color: 'white', border: 'none', borderRadius: '14px', padding: '16px 52px', fontSize: '18px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 0 30px rgba(62,207,142,0.4)', marginBottom: '12px' }}>
           Get Started →
         </button>
         <p style={{ color: '#567', fontSize: '13px', marginBottom: '60px' }}>Login or create an account to continue</p>

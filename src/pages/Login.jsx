@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { supabase } from '../supabase'
 
 const MANAGER_SECRET = 'EPISAFE2025'
+const staffTypes = ['Teacher', 'Support Staff', 'Attendants', 'Administrative Staff']
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('learner')
+  const [staffType, setStaffType] = useState('')
   const [managerCode, setManagerCode] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -14,6 +16,7 @@ function Login({ onLogin }) {
 
   async function handleSubmit() {
     if (!email || !password) return setError('Please enter email and password')
+    if (isSignUp && role === 'staff' && !staffType) return setError('Please select your staff type')
     if (isSignUp && role === 'manager' && managerCode !== MANAGER_SECRET) {
       return setError('Invalid manager code. Please contact your administrator.')
     }
@@ -24,7 +27,7 @@ function Login({ onLogin }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { role } }
+        options: { data: { role, staff_type: role === 'staff' ? staffType : null } }
       })
       if (error) setError(error.message)
       else setError('Account created! You can now log in.')
@@ -34,6 +37,12 @@ function Login({ onLogin }) {
       else onLogin()
     }
     setLoading(false)
+  }
+
+  function selectRole(newRole) {
+    setRole(newRole)
+    setStaffType('')
+    setManagerCode('')
   }
 
   return (
@@ -54,13 +63,34 @@ function Login({ onLogin }) {
           <div className="form-group">
             <label>I am a</label>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
-              <button onClick={() => setRole('learner')} style={{ flex: 1, padding: '10px', border: role === 'learner' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: role === 'learner' ? '#e6fff5' : 'white', color: role === 'learner' ? '#0F6E56' : '#666', fontWeight: role === 'learner' ? '500' : '400' }}>
+              <button onClick={() => selectRole('learner')} style={{ flex: 1, padding: '10px', border: role === 'learner' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: role === 'learner' ? '#e6fff5' : 'white', color: role === 'learner' ? '#0F6E56' : '#666', fontWeight: role === 'learner' ? '500' : '400' }}>
                 🎒 Learner
               </button>
-              <button onClick={() => setRole('manager')} style={{ flex: 1, padding: '10px', border: role === 'manager' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: role === 'manager' ? '#e6fff5' : 'white', color: role === 'manager' ? '#0F6E56' : '#666', fontWeight: role === 'manager' ? '500' : '400' }}>
+              <button onClick={() => selectRole('staff')} style={{ flex: 1, padding: '10px', border: role === 'staff' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: role === 'staff' ? '#e6fff5' : 'white', color: role === 'staff' ? '#0F6E56' : '#666', fontWeight: role === 'staff' ? '500' : '400' }}>
+                🧑‍🏫 Staff
+              </button>
+              <button onClick={() => selectRole('manager')} style={{ flex: 1, padding: '10px', border: role === 'manager' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: role === 'manager' ? '#e6fff5' : 'white', color: role === 'manager' ? '#0F6E56' : '#666', fontWeight: role === 'manager' ? '500' : '400' }}>
                 🏫 Manager
               </button>
             </div>
+
+            {role === 'staff' && (
+              <div className="form-group">
+                <label>Staff Type</label>
+                <select value={staffType} onChange={e => setStaffType(e.target.value)}>
+                  <option value="">-- Select staff type --</option>
+                  {staffTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            )}
+
+            {role === 'manager' && (
+              <div className="form-group">
+                <label>Manager Secret Code</label>
+                <input type="password" value={managerCode} onChange={e => setManagerCode(e.target.value)} placeholder="Enter secret code provided by administrator" />
+                <p style={{ fontSize: '12px', color: '#888', marginTop: '-8px' }}>Contact your school administrator for this code.</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -79,14 +109,6 @@ function Login({ onLogin }) {
           <label>Password</label>
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
         </div>
-
-        {isSignUp && role === 'manager' && (
-          <div className="form-group">
-            <label>Manager Secret Code</label>
-            <input type="password" value={managerCode} onChange={e => setManagerCode(e.target.value)} placeholder="Enter secret code provided by administrator" />
-            <p style={{ fontSize: '12px', color: '#888', marginTop: '-8px' }}>Contact your school administrator for this code.</p>
-          </div>
-        )}
 
         <button className="btn btn-primary" style={{ width: '100%', padding: '12px', marginTop: '8px', fontSize: '15px' }} onClick={handleSubmit} disabled={loading}>
           {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Login'}
