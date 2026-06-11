@@ -151,6 +151,9 @@ function Registry() {
     l.seizure_type?.toLowerCase().includes(search.toLowerCase())
   )
 
+  const vulnColors = { High: '#ff4d4f', Moderate: '#fa8c16', 'Low-Moderate': '#fadb14', Low: '#3ECF8E' }
+  const vulnScores = { High: 9, Moderate: 6, 'Low-Moderate': 4, Low: 2 }
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -290,23 +293,33 @@ function Registry() {
           <table>
             <thead>
               <tr>
-                <th>Name</th><th>Grade</th><th>Seizure Type</th><th>Emergency Contact</th><th>Status</th><th></th>
+                <th>Name</th><th>Grade</th><th>Seizure Type</th><th>Vulnerability</th><th>Emergency Contact</th><th>Status</th><th></th>
               </tr>
             </thead>
             <tbody>
-              {filteredLearners.map(l => (
-                <tr key={l.id}>
-                  <td><strong>{l.full_name}</strong></td>
-                  <td>{l.grade}</td>
-                  <td>{l.seizure_type || '—'}</td>
-                  <td>{l.emergency_contact_name}<br /><small style={{ color: '#888' }}>{l.emergency_contact_phone}</small></td>
-                  <td><span className={badgeClass(l.status)}>{l.status}</span></td>
-                  <td style={{ display: 'flex', gap: '6px' }}>
-                    <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => printLearner(l)}>🖨️ Print</button>
-                    <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => deleteLearner(l.id)}>Remove</button>
-                  </td>
-                </tr>
-              ))}
+              {filteredLearners.map(l => {
+                const vulnLevel = l.action_plan && vulnColors[l.action_plan] ? l.action_plan : null
+                return (
+                  <tr key={l.id}>
+                    <td><strong>{l.full_name}</strong></td>
+                    <td>{l.grade}</td>
+                    <td>{l.seizure_type || '—'}</td>
+                    <td>
+                      {vulnLevel ? (
+                        <span style={{ background: vulnColors[vulnLevel] + '22', color: vulnColors[vulnLevel], border: `1px solid ${vulnColors[vulnLevel]}44`, borderRadius: '20px', padding: '2px 10px', fontSize: '12px', fontWeight: '600' }}>
+                          {vulnLevel} ({vulnScores[vulnLevel]}/10)
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td>{l.emergency_contact_name}<br /><small style={{ color: '#888' }}>{l.emergency_contact_phone}</small></td>
+                    <td><span className={badgeClass(l.status)}>{l.status}</span></td>
+                    <td style={{ display: 'flex', gap: '6px' }}>
+                      <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => printLearner(l)}>🖨️ Print</button>
+                      <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => deleteLearner(l.id)}>Remove</button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}

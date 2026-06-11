@@ -8,7 +8,7 @@ const rejectionReasons = [
   'Not a registered learner at this school',
   'Parental consent required — please contact the school health team',
   'Medical details require further clarification — please visit the school health office',
-  'Learner runs no risk and is Episafe — no further action needed',
+  'Learner has no risk and is episafe',
 ]
 
 function Pending() {
@@ -84,7 +84,8 @@ function Pending() {
     return `Dear ${l.emergency_contact_name || 'Parent/Guardian'},\n\nWe regret to inform you that ${l.full_name}'s health registration on EpiSafe School could not be approved at this time.\n\nReason: ${reason}\n\nPlease contact the school health team for further assistance or to re-register.\n\nThank you.\nEpiSafe School Health Team`
   }
 
-  const riskColor = r => r === 'High' ? '#ff4d4f' : r === 'Moderate' ? '#fa8c16' : '#3ECF8E'
+  const riskColor = r => r === 'High' ? '#ff4d4f' : r === 'Moderate' ? '#fa8c16' : r === 'Low-Moderate' ? '#fadb14' : '#3ECF8E'
+  const vulnScores = { High: 9, Moderate: 6, 'Low-Moderate': 4, Low: 2 }
 
   return (
     <div>
@@ -200,7 +201,7 @@ function Pending() {
                   <h2 style={{ fontSize: '16px' }}>{l.full_name}</h2>
                   {l.action_plan && (
                     <span style={{ background: riskColor(l.action_plan) + '22', color: riskColor(l.action_plan), border: `1px solid ${riskColor(l.action_plan)}44`, borderRadius: '20px', padding: '2px 10px', fontSize: '12px', fontWeight: '600' }}>
-                      {l.action_plan} Risk
+                      Vulnerability: {l.action_plan} ({vulnScores[l.action_plan] ?? '—'}/10)
                     </span>
                   )}
                 </div>

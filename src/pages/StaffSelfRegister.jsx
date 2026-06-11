@@ -25,12 +25,10 @@ const medications = [
 const staffTypes = ['Teacher', 'Support Staff', 'Attendants', 'Administrative Staff']
 
 const departments = [
-  // Academic subjects
   'English', 'French', 'Mathematics', 'Sciences (Biology/Physics/Chemistry)',
   'History & Geography', 'Economics', 'Accounting / Business Studies',
   'Computer Science / IT', 'Art & Design', 'Music', 'Physical Education (PE)',
   'Hindi / Asian Languages', 'Literature in English',
-  // Functional areas
   'Administration', 'Library', 'Canteen', 'Health Office / Sick Bay',
   'Security', 'Maintenance / Facilities', 'Counselling / Welfare',
   'Laboratory (Lab Technician)', 'Other',
@@ -104,6 +102,7 @@ function StaffSelfRegister({ session, onLogout }) {
     const { level } = calcRiskLevel(screenAnswers)
     const colors = { High: '#ff4d4f', Moderate: '#fa8c16', 'Low-Moderate': '#fadb14', Low: '#3ECF8E' }
     const emojis = { High: '🔴', Moderate: '🟠', 'Low-Moderate': '🟡', Low: '🟢' }
+    const vulnScores = { High: 9, Moderate: 6, 'Low-Moderate': 4, Low: 2 }
     return (
       <div style={{ minHeight: '100vh', background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ background: 'white', borderRadius: '16px', padding: '40px', maxWidth: '480px', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
@@ -112,14 +111,18 @@ function StaffSelfRegister({ session, onLogout }) {
           <p style={{ color: '#666', lineHeight: '1.7', marginBottom: '20px' }}>
             Thank you for registering. Your information has been securely submitted to the school health team.
           </p>
-          {level !== 'Low' && (
-            <div style={{ background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
-              <div style={{ fontSize: '24px', marginBottom: '6px' }}>{emojis[level]}</div>
-              <p style={{ fontSize: '13px', color: colors[level], fontWeight: '600' }}>
-                {level} Risk Detected — A staff member from health team will follow up with you shortly.
+          <div style={{ background: '#f0f4f8', border: '1px solid #e0e6ed', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
+            <p style={{ fontSize: '12px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Epilepsy Vulnerability Level</p>
+            <div style={{ fontSize: '24px', marginBottom: '6px' }}>{emojis[level]}</div>
+            <p style={{ fontSize: '15px', color: colors[level], fontWeight: '700', marginBottom: level !== 'Low' ? '4px' : 0 }}>
+              {level} ({vulnScores[level]}/10)
+            </p>
+            {level !== 'Low' && (
+              <p style={{ fontSize: '13px', color: colors[level], fontWeight: '500' }}>
+                A member of the health team will follow up with you shortly.
               </p>
-            </div>
-          )}
+            )}
+          </div>
           <button className="btn btn-primary" onClick={onLogout}>Done</button>
         </div>
       </div>
