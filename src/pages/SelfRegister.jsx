@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 
 const seizureTypes = [
@@ -67,6 +68,7 @@ function calcRiskLevel(answers) {
 }
 
 function SelfRegister({ session, onLogout }) {
+  const navigate = useNavigate()
   const [step, setStep] = useState(1) // 1=personal, 2=medical, 3=screening, 4=emergency
   const [selectedZone, setSelectedZone] = useState('')
   const [screenAnswers, setScreenAnswers] = useState({})
@@ -78,6 +80,11 @@ function SelfRegister({ session, onLogout }) {
     medication: '', triggers: '', emergency_contact_name: '',
     emergency_contact_phone: '', emergency_contact_email: '', action_plan: '', status: 'pending'
   })
+
+  function goHome() {
+    onLogout()
+    navigate('/')
+  }
 
   const selectedSeizure = seizureTypes.find(s => s.value === form.seizure_type)
   const schoolList = selectedZone ? schoolsByZone[selectedZone] : []
@@ -121,19 +128,19 @@ function SelfRegister({ session, onLogout }) {
     return (
       <div style={{ minHeight: '100vh', background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ background: 'white', borderRadius: '16px', padding: '40px', maxWidth: '480px', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>✅</div>
+          <div style={{ fontSize: '4rem', marginBottom: '16px' }}>✅</div>
           <h2 style={{ color: '#1a1a2e', marginBottom: '12px' }}>Registration Complete!</h2>
           <p style={{ color: '#666', lineHeight: '1.7', marginBottom: '20px' }}>
             Thank you for registering. Your information has been securely submitted to the school health team.
           </p>
           <div style={{ background: '#f0f4f8', border: '1px solid #e0e6ed', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
-            <p style={{ fontSize: '12px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Epilepsy Vulnerability Level</p>
-            <div style={{ fontSize: '24px', marginBottom: '6px' }}>{emojis[level]}</div>
-            <p style={{ fontSize: '15px', color: colors[level], fontWeight: '700', marginBottom: level !== 'Low' ? '4px' : 0 }}>
+            <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Epilepsy Vulnerability Level</p>
+            <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>{emojis[level]}</div>
+            <p style={{ fontSize: '0.9375rem', color: colors[level], fontWeight: '700', marginBottom: level !== 'Low' ? '4px' : 0 }}>
               {level} ({vulnScores[level]}/10)
             </p>
             {level !== 'Low' && (
-              <p style={{ fontSize: '13px', color: colors[level], fontWeight: '500' }}>
+              <p style={{ fontSize: '0.8125rem', color: colors[level], fontWeight: '500' }}>
                 A staff member will follow up with you shortly.
               </p>
             )}
@@ -146,13 +153,17 @@ function SelfRegister({ session, onLogout }) {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f0f4f8', padding: '20px' }}>
+      <button onClick={goHome} style={{ position: 'fixed', top: '16px', left: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        🏠 Home
+      </button>
+
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <div style={{ fontSize: '36px' }}>🧠</div>
-          <h1 style={{ color: '#1a1a2e', fontSize: '20px', marginBottom: '4px' }}>EpiSafe — Learner Registration</h1>
-          <p style={{ color: '#888', fontSize: '13px' }}>Your information is confidential and secure</p>
+          <div style={{ fontSize: '2.25rem' }}>🧠</div>
+          <h1 style={{ color: '#1a1a2e', fontSize: '1.25rem', marginBottom: '4px' }}>EpiSafe — Learner Registration</h1>
+          <p style={{ color: '#888', fontSize: '0.8125rem' }}>Your information is confidential and secure</p>
         </div>
 
         {/* Step indicator */}
@@ -163,14 +174,14 @@ function SelfRegister({ session, onLogout }) {
                 height: '4px', borderRadius: '2px', marginBottom: '6px',
                 background: i < step ? '#3ECF8E' : i === step - 1 ? '#3ECF8E' : '#e0e0e0'
               }} />
-              <div style={{ fontSize: '9px', color: i === step - 1 ? '#3ECF8E' : '#aaa', fontWeight: i === step - 1 ? '700' : '400' }}>
+              <div style={{ fontSize: '0.5625rem', color: i === step - 1 ? '#3ECF8E' : '#aaa', fontWeight: i === step - 1 ? '700' : '400' }}>
                 {s}
               </div>
             </div>
           ))}
         </div>
 
-        {error && <div style={{ background: '#fff1f0', color: '#ff4d4f', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>{error}</div>}
+        {error && <div style={{ background: '#fff1f0', color: '#ff4d4f', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.8125rem' }}>{error}</div>}
 
         {/* STEP 1 — Personal Details */}
         {step === 1 && (
@@ -251,7 +262,7 @@ function SelfRegister({ session, onLogout }) {
                     {seizureTypes.map(s => <option key={s.value} value={s.value}>{s.value}</option>)}
                   </select>
                   {selectedSeizure && (
-                    <div style={{ background: '#e6fff5', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#0F6E56', marginTop: '-8px', marginBottom: '12px' }}>
+                    <div style={{ background: '#e6fff5', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8125rem', color: '#0F6E56', marginTop: '-8px', marginBottom: '12px' }}>
                       ℹ️ {selectedSeizure.desc}
                     </div>
                   )}
@@ -280,10 +291,10 @@ function SelfRegister({ session, onLogout }) {
         {step === 3 && (
           <div className="card">
             <h2 style={{ marginBottom: '4px' }}>📋 Health Screening</h2>
-            <p style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>Answer honestly — this helps identify if you need health support at school.</p>
+            <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '16px' }}>Answer honestly — this helps identify if you need health support at school.</p>
             {screeningQuestions.map((q, i) => (
               <div key={q.id} style={{ marginBottom: '14px', padding: '12px', background: screenAnswers[q.id] !== undefined ? '#f9fffe' : '#f9f9f9', borderRadius: '8px', border: screenAnswers[q.id] !== undefined ? '1px solid #3ECF8E' : '1px solid #eee' }}>
-                <p style={{ fontSize: '13px', color: '#333', marginBottom: '8px', fontWeight: '500' }}>{i + 1}. {q.text}</p>
+                <p style={{ fontSize: '0.8125rem', color: '#333', marginBottom: '8px', fontWeight: '500' }}>{i + 1}. {q.text}</p>
                 <select
                   value={screenAnswers[q.id]?.index ?? ''}
                   onChange={e => { const idx = parseInt(e.target.value); setScreenAnswer(q.id, idx, q.weights[idx]) }}
@@ -321,7 +332,7 @@ function SelfRegister({ session, onLogout }) {
                 <input type="email" value={form.emergency_contact_email} onChange={e => setForm({ ...form, emergency_contact_email: e.target.value })} placeholder="parent@example.com" />
               </div>
             </div>
-            <div style={{ background: '#e6fff5', border: '1px solid #3ECF8E', borderRadius: '10px', padding: '12px', marginBottom: '16px', fontSize: '12px', color: '#0F6E56' }}>
+            <div style={{ background: '#e6fff5', border: '1px solid #3ECF8E', borderRadius: '10px', padding: '12px', marginBottom: '16px', fontSize: '0.75rem', color: '#0F6E56' }}>
               ✅ Almost done! By submitting you confirm that the information provided is accurate and you consent to it being stored securely by your school health team.
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -333,7 +344,7 @@ function SelfRegister({ session, onLogout }) {
           </div>
         )}
 
-        <button onClick={onLogout} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '13px', marginTop: '8px' }}>
+        <button onClick={onLogout} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '0.8125rem', marginTop: '8px' }}>
           Logout
         </button>
       </div>

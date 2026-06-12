@@ -42,8 +42,8 @@ html, body, #root {
   border-bottom: 1px solid #2a2a4e;
 }
 
-.logo-icon { font-size: 24px; }
-.logo-text { font-size: 15px; font-weight: 600; color: #3ECF8E; }
+.logo-icon { font-size: 1.5rem; }
+.logo-text { font-size: 0.9375rem; font-weight: 600; color: #3ECF8E; }
 
 nav {
   display: flex;
@@ -60,7 +60,7 @@ nav {
   padding: 12px 16px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 1rem;
   transition: all 0.2s;
   width: 100%;
 }
@@ -76,9 +76,9 @@ nav {
   padding: 30px;
 }
 
-h1 { font-size: 24px; color: #1a1a2e; margin-bottom: 6px; }
-h2 { font-size: 18px; color: #1a1a2e; margin-bottom: 16px; }
-p { color: #666; font-size: 16px; }
+h1 { font-size: 1.5rem; color: #1a1a2e; margin-bottom: 6px; }
+h2 { font-size: 1.125rem; color: #1a1a2e; margin-bottom: 16px; }
+p { color: #666; font-size: 1rem; }
 
 .card {
   background: white;
@@ -105,15 +105,15 @@ p { color: #666; font-size: 16px; }
   text-align: center;
 }
 
-.stat-number { font-size: 32px; font-weight: 600; color: #3ECF8E; }
-.stat-label { font-size: 13px; color: #888; margin-top: 4px; }
+.stat-number { font-size: 2rem; font-weight: 600; color: #3ECF8E; }
+.stat-label { font-size: 0.8125rem; color: #888; margin-top: 4px; }
 
 .btn {
   padding: 10px 20px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
   transition: all 0.2s;
 }
@@ -128,7 +128,7 @@ input, select, textarea {
   padding: 10px 14px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 1rem;
   margin-bottom: 12px;
   outline: none;
 }
@@ -138,17 +138,17 @@ input:focus, select:focus, textarea:focus {
 }
 
 .form-group { margin-bottom: 8px; }
-.form-group label { font-size: 14px; color: #555; margin-bottom: 4px; display: block; }
+.form-group label { font-size: 0.875rem; color: #555; margin-bottom: 4px; display: block; }
 
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-th { text-align: left; padding: 12px; font-size: 14px; color: #888; border-bottom: 1px solid #eee; }
-td { padding: 12px; font-size: 16px; border-bottom: 1px solid #f5f5f5; word-wrap: break-word; }
+th { text-align: left; padding: 12px; font-size: 0.875rem; color: #888; border-bottom: 1px solid #eee; }
+td { padding: 12px; font-size: 1rem; border-bottom: 1px solid #f5f5f5; word-wrap: break-word; }
 tr:hover td { background: #f9fffe; }
 
 .badge {
   padding: 3px 10px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
 }
 

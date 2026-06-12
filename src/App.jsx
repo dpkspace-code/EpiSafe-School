@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from './supabase'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -10,6 +10,9 @@ import Guides from './pages/Guides'
 import SelfRegister from './pages/SelfRegister'
 import StaffSelfRegister from './pages/StaffSelfRegister'
 import Pending from './pages/Pending'
+import StaffPending from './pages/StaffPending'
+import StaffRegistry from './pages/StaffRegistry'
+import FontPicker, { applyStoredFont } from './FontPicker'
 import './App.css'
 
 function App() {
@@ -17,6 +20,11 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
+  const [staffPendingCount, setStaffPendingCount] = useState(0)
+
+  useEffect(() => {
+    applyStoredFont()
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -33,7 +41,10 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (userRole === 'manager') fetchPendingCount()
+    if (userRole === 'manager') {
+      fetchPendingCount()
+      fetchStaffPendingCount()
+    }
   }, [userRole])
 
   async function fetchPendingCount() {
@@ -42,6 +53,14 @@ function App() {
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pending')
     setPendingCount(count || 0)
+  }
+
+  async function fetchStaffPendingCount() {
+    const { count } = await supabase
+      .from('staff_registry')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+    setStaffPendingCount(count || 0)
   }
 
   async function handleLogout() {
@@ -62,22 +81,25 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={
-          session ? <Navigate to="/app" replace /> : <Landing />
+          session ? <Navigate to="/app" replace /> : <><Landing /><FontPicker /></>
         } />
 
         <Route path="/login" element={
           session ? <Navigate to="/app" replace /> : (
-            <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => {
-              setSession(session)
-              setUserRole(session.user.user_metadata?.role || 'learner')
-            })} />
+            <>
+              <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => {
+                setSession(session)
+                setUserRole(session.user.user_metadata?.role || 'learner')
+              })} />
+              <FontPicker />
+            </>
           )
         } />
 
         <Route path="/register" element={
           !session ? <Navigate to="/login" replace /> :
-          userRole === 'learner' ? <SelfRegister session={session} onLogout={handleLogout} /> :
-          userRole === 'staff' ? <StaffSelfRegister session={session} onLogout={handleLogout} /> :
+          userRole === 'learner' ? <><SelfRegister session={session} onLogout={handleLogout} /><FontPicker /></> :
+          userRole === 'staff' ? <><StaffSelfRegister session={session} onLogout={handleLogout} /><FontPicker /></> :
           <Navigate to="/app" replace />
         } />
 
@@ -87,7 +109,9 @@ function App() {
           <ManagerLayout
             session={session}
             pendingCount={pendingCount}
+            staffPendingCount={staffPendingCount}
             fetchPendingCount={fetchPendingCount}
+            fetchStaffPendingCount={fetchStaffPendingCount}
             onLogout={handleLogout}
           />
         } />
@@ -98,9 +122,15 @@ function App() {
   )
 }
 
-function ManagerLayout({ session, pendingCount, fetchPendingCount, onLogout }) {
+function ManagerLayout({ session, pendingCount, staffPendingCount, fetchPendingCount, fetchStaffPendingCount, onLogout }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const isActive = (path) => location.pathname === `/app/${path}` ? 'nav-btn active' : 'nav-btn'
+
+  function goHome() {
+    onLogout()
+    navigate('/')
+  }
 
   return (
     <div className="app">
@@ -110,6 +140,7 @@ function ManagerLayout({ session, pendingCount, fetchPendingCount, onLogout }) {
           <span className="logo-text">EpiSafe School</span>
         </div>
         <nav>
+          <button className="nav-btn" onClick={goHome}>🏠 Home</button>
           <Link className={isActive('dashboard')} to="/app/dashboard">📊 Dashboard</Link>
           <Link className={isActive('screener')} to="/app/screener">📋 Screener</Link>
           <Link className={isActive('registry')} to="/app/registry">👥 Registry</Link>
@@ -122,8 +153,22 @@ function ManagerLayout({ session, pendingCount, fetchPendingCount, onLogout }) {
           >
             ⏳ Pending {pendingCount > 0 ? `(${pendingCount})` : ''}
           </Link>
+
+          <div style={{ height: '1px', background: '#2a2a4e', margin: '8px 0' }} />
+
+          <Link className={isActive('staff-registry')} to="/app/staff-registry">🧑‍🏫 Staff Registry</Link>
+          <Link
+            className={isActive('staff-pending')}
+            to="/app/staff-pending"
+            onClick={fetchStaffPendingCount}
+            style={{ color: staffPendingCount > 0 ? '#fa8c16' : '' }}
+          >
+            ⏳ Staff Pending {staffPendingCount > 0 ? `(${staffPendingCount})` : ''}
+          </Link>
         </nav>
         <div style={{ marginTop: 'auto', padding: '20px 12px' }}>
+          <FontPicker floating={false} />
+          <div style={{ height: '12px' }} />
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px', paddingLeft: '4px' }}>👤 Manager</div>
           <div style={{ fontSize: '11px', color: '#555', marginBottom: '8px', paddingLeft: '4px' }}>{session.user.email}</div>
           <button className="nav-btn" style={{ color: '#ff4d4f', width: '100%' }} onClick={onLogout}>🚪 Logout</button>
@@ -136,6 +181,8 @@ function ManagerLayout({ session, pendingCount, fetchPendingCount, onLogout }) {
           <Route path="registry" element={<Registry />} />
           <Route path="guides" element={<Guides />} />
           <Route path="pending" element={<Pending />} />
+          <Route path="staff-registry" element={<StaffRegistry />} />
+          <Route path="staff-pending" element={<StaffPending />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Routes>
       </div>

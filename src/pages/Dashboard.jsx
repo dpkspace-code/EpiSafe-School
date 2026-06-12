@@ -66,7 +66,7 @@ function Dashboard() {
         ) : (
           data.map((d, i) => (
             <div key={i} style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: '4px' }}>
                 <span style={{ color: '#333' }}>{d.name}</span>
                 <span style={{ fontWeight: '500', color: colors[i % colors.length] }}>{d.count}</span>
               </div>
@@ -105,7 +105,7 @@ function Dashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h2 style={{ color: '#854F0B', marginBottom: '4px' }}>⏳ Pending Approvals</h2>
-              <p style={{ color: '#854F0B', fontSize: '13px' }}>
+              <p style={{ color: '#854F0B', fontSize: '0.8125rem' }}>
                 <strong>{pendingCount}</strong> learner{pendingCount > 1 ? 's' : ''} waiting for your review and approval
               </p>
             </div>
@@ -128,6 +128,22 @@ function Dashboard() {
           <button className="btn btn-primary" onClick={() => navigate('/app/registry')}>➕ Add Learner</button>
           <button className="btn btn-secondary" onClick={() => navigate('/app/guides')}>📖 View Guides</button>
           {pendingCount > 0 && <button className="btn" style={{ background: '#ffe58f', color: '#854F0B' }} onClick={() => navigate('/app/pending')}>⏳ Pending ({pendingCount})</button>}
+        </div>
+      </div>
+
+      <div className="card">
+        <h2>🎥 Epilepsy & Seizure First Aid</h2>
+        <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '12px' }}>
+          A comprehensive video covering the different types of seizures and how to respond with seizure first aid.
+        </p>
+        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: '12px', overflow: 'hidden' }}>
+          <iframe
+            src="https://www.youtube.com/embed/z6K8XQQf9ss"
+            title="Epilepsy and Seizure First Aid"
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
         </div>
       </div>
 

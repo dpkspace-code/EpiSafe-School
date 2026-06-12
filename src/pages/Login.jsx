@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 
 const MANAGER_SECRET = 'EPISAFE2025'
 const staffTypes = ['Teacher', 'Support Staff', 'Attendants', 'Administrative Staff']
 
 function Login({ onLogin }) {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('learner')
@@ -46,12 +48,16 @@ function Login({ onLogin }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+      <button onClick={() => navigate('/')} style={{ position: 'fixed', top: '16px', left: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        🏠 Home
+      </button>
+
       <div style={{ background: 'white', borderRadius: '16px', padding: '40px', width: '100%', maxWidth: '420px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🧠</div>
-          <h1 style={{ fontSize: '24px', color: '#1a1a2e', marginBottom: '6px' }}>EpiSafe School</h1>
-          <p style={{ color: '#888', fontSize: '14px' }}>Epilepsy management for Mauritian schools</p>
+          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🧠</div>
+          <h1 style={{ fontSize: '1.5rem', color: '#1a1a2e', marginBottom: '6px' }}>EpiSafe School</h1>
+          <p style={{ color: '#888', fontSize: '0.875rem', textTransform: 'uppercase' }}>Epilepsy management for Mauritian schools</p>
         </div>
 
         <div style={{ marginBottom: '20px', background: '#f0f4f8', borderRadius: '8px', padding: '4px', display: 'flex' }}>
@@ -88,14 +94,14 @@ function Login({ onLogin }) {
               <div className="form-group">
                 <label>Manager Secret Code</label>
                 <input type="password" value={managerCode} onChange={e => setManagerCode(e.target.value)} placeholder="Enter secret code provided by administrator" />
-                <p style={{ fontSize: '12px', color: '#888', marginTop: '-8px' }}>Contact your school administrator for this code.</p>
+                <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '-8px' }}>Contact your school administrator for this code.</p>
               </div>
             )}
           </div>
         )}
 
         {error && (
-          <div style={{ padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', background: error.includes('created') ? '#e6fff5' : '#fff1f0', color: error.includes('created') ? '#0F6E56' : '#ff4d4f', fontSize: '13px' }}>
+          <div style={{ padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', background: error.includes('created') ? '#e6fff5' : '#fff1f0', color: error.includes('created') ? '#0F6E56' : '#ff4d4f', fontSize: '0.8125rem' }}>
             {error}
           </div>
         )}
@@ -110,11 +116,11 @@ function Login({ onLogin }) {
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
         </div>
 
-        <button className="btn btn-primary" style={{ width: '100%', padding: '12px', marginTop: '8px', fontSize: '15px' }} onClick={handleSubmit} disabled={loading}>
+        <button className="btn btn-primary" style={{ width: '100%', padding: '12px', marginTop: '8px', fontSize: '0.9375rem' }} onClick={handleSubmit} disabled={loading}>
           {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Login'}
         </button>
 
-        <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: '#aaa' }}>
+        <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.75rem', color: '#aaa' }}>
           EpiSafe — Supporting epilepsy awareness in Mauritius
         </p>
       </div>

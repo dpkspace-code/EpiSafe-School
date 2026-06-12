@@ -3,19 +3,18 @@ import { supabase } from '../supabase'
 
 const rejectionReasons = [
   'Incomplete information provided — please re-register with full details',
-  'Duplicate registration — a profile already exists for this learner',
+  'Duplicate registration — a profile already exists for this staff member',
   'Information could not be verified — please visit the school health office',
-  'Not a registered learner at this school',
-  'Parental consent required — please contact the school health team',
+  'Not a registered staff member at this school',
   'Medical details require further clarification — please visit the school health office',
-  'Learner has no risk and is episafe',
+  'Staff member has no risk and is episafe',
 ]
 
-function Pending() {
+function StaffPending() {
   const [pending, setPending] = useState([])
   const [loading, setLoading] = useState(true)
   const [approved, setApproved] = useState({})
-  const [rejectModal, setRejectModal] = useState(null) // single learner OR 'bulk'
+  const [rejectModal, setRejectModal] = useState(null) // single staff member OR 'bulk'
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
   const [rejected, setRejected] = useState({})
@@ -26,7 +25,7 @@ function Pending() {
   async function fetchPending() {
     setLoading(true)
     const { data } = await supabase
-      .from('learners').select('*')
+      .from('staff_registry').select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
     setPending(data || [])
@@ -45,22 +44,22 @@ function Pending() {
 
   function toggleSelectAll() {
     if (selected.size === pending.length) setSelected(new Set())
-    else setSelected(new Set(pending.map(l => l.id)))
+    else setSelected(new Set(pending.map(s => s.id)))
   }
 
-  async function approve(learner) {
-    await supabase.from('learners').update({ status: 'active' }).eq('id', learner.id)
-    setApproved(prev => ({ ...prev, [learner.id]: learner }))
+  async function approve(staff) {
+    await supabase.from('staff_registry').update({ status: 'active' }).eq('id', staff.id)
+    setApproved(prev => ({ ...prev, [staff.id]: staff }))
     fetchPending()
   }
 
   async function approveSelected() {
     const ids = [...selected]
-    await supabase.from('learners').update({ status: 'active' }).in('id', ids)
-    const approvedLearners = pending.filter(l => ids.includes(l.id))
+    await supabase.from('staff_registry').update({ status: 'active' }).in('id', ids)
+    const approvedStaff = pending.filter(s => ids.includes(s.id))
     setApproved(prev => {
       const next = { ...prev }
-      approvedLearners.forEach(l => { next[l.id] = l })
+      approvedStaff.forEach(s => { next[s.id] = s })
       return next
     })
     fetchPending()
@@ -68,13 +67,13 @@ function Pending() {
 
   async function deleteSelected() {
     if (!confirm(`Delete ${selected.size} selected record(s)? This cannot be undone.`)) return
-    await supabase.from('learners').delete().in('id', [...selected])
+    await supabase.from('staff_registry').delete().in('id', [...selected])
     fetchPending()
   }
 
   async function deleteAll() {
     if (!confirm(`Delete ALL ${pending.length} pending record(s)? This cannot be undone.`)) return
-    await supabase.from('learners').delete().in('id', pending.map(l => l.id))
+    await supabase.from('staff_registry').delete().in('id', pending.map(s => s.id))
     fetchPending()
   }
 
@@ -84,17 +83,17 @@ function Pending() {
 
     if (rejectModal === 'bulk') {
       const ids = [...selected]
-      const rejectedLearners = pending.filter(l => ids.includes(l.id))
-      await supabase.from('learners').delete().in('id', ids)
+      const rejectedStaff = pending.filter(s => ids.includes(s.id))
+      await supabase.from('staff_registry').delete().in('id', ids)
       setRejected(prev => {
         const next = { ...prev }
-        rejectedLearners.forEach(l => { next[l.id] = { ...l, reason } })
+        rejectedStaff.forEach(s => { next[s.id] = { ...s, reason } })
         return next
       })
     } else {
-      const learner = rejectModal
-      await supabase.from('learners').delete().eq('id', learner.id)
-      setRejected(prev => ({ ...prev, [learner.id]: { ...learner, reason } }))
+      const staff = rejectModal
+      await supabase.from('staff_registry').delete().eq('id', staff.id)
+      setRejected(prev => ({ ...prev, [staff.id]: { ...staff, reason } }))
     }
 
     setRejectModal(null)
@@ -119,22 +118,22 @@ function Pending() {
     })
   }
 
-  function sendWhatsApp(learner, message) {
-    const phone = learner.emergency_contact_phone?.replace(/\s/g, '')
+  function sendWhatsApp(staff, message) {
+    const phone = staff.emergency_contact_phone?.replace(/\s/g, '')
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
   }
 
-  function sendEmail(learner, subject, message) {
-    const to = learner.emergency_contact_email || ''
+  function sendEmail(staff, subject, message) {
+    const to = staff.emergency_contact_email || ''
     window.open(`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank')
   }
 
-  function approvalMessage(l) {
-    return `Dear ${l.emergency_contact_name || 'Parent/Guardian'},\n\nWe are pleased to inform you that ${l.full_name}'s health registration on EpiSafe School has been APPROVED by the school health team.\n\nYour child's health profile is now active in our system and will help ensure their safety at school.\n\nShould you have any questions, please contact the school health team.\n\nThank you.\nEpiSafe School Health Team`
+  function approvalMessage(s) {
+    return `Dear ${s.emergency_contact_name || 'Emergency Contact'},\n\nWe are pleased to inform you that ${s.full_name}'s health registration on EpiSafe School has been APPROVED by the school health team.\n\nTheir health profile is now active in our system and will help ensure their safety at school.\n\nShould you have any questions, please contact the school health team.\n\nThank you.\nEpiSafe School Health Team`
   }
 
-  function rejectionMessage(l, reason) {
-    return `Dear ${l.emergency_contact_name || 'Parent/Guardian'},\n\nWe regret to inform you that ${l.full_name}'s health registration on EpiSafe School could not be approved at this time.\n\nReason: ${reason}\n\nPlease contact the school health team for further assistance or to re-register.\n\nThank you.\nEpiSafe School Health Team`
+  function rejectionMessage(s, reason) {
+    return `Dear ${s.emergency_contact_name || 'Emergency Contact'},\n\nWe regret to inform you that ${s.full_name}'s health registration on EpiSafe School could not be approved at this time.\n\nReason: ${reason}\n\nPlease contact the school health team for further assistance or to re-register.\n\nThank you.\nEpiSafe School Health Team`
   }
 
   const riskColor = r => r === 'High' ? '#ff4d4f' : r === 'Moderate' ? '#fa8c16' : r === 'Low-Moderate' ? '#fadb14' : '#3ECF8E'
@@ -144,8 +143,8 @@ function Pending() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '8px' }}>
         <div>
-          <h1>⏳ Pending Approvals</h1>
-          <p>Review learner self-registrations and approve or reject them.</p>
+          <h1>⏳ Staff Pending Approvals</h1>
+          <p>Review staff self-registrations and approve or reject them.</p>
         </div>
         {pending.length > 0 && (
           <button className="btn btn-danger" onClick={deleteAll}>
@@ -176,8 +175,8 @@ function Pending() {
             <h2 style={{ marginBottom: '6px', color: '#1a1a2e' }}>❌ Reject Registration{rejectModal === 'bulk' ? 's' : ''}</h2>
             <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '16px' }}>
               {rejectModal === 'bulk'
-                ? <>Rejecting <strong>{selected.size}</strong> selected learner(s). Select a reason to notify parents/guardians.</>
-                : <>Rejecting <strong>{rejectModal.full_name}</strong>. Select a reason to notify the parent/guardian.</>}
+                ? <>Rejecting <strong>{selected.size}</strong> selected staff member(s). Select a reason to notify their emergency contact.</>
+                : <>Rejecting <strong>{rejectModal.full_name}</strong>. Select a reason to notify the emergency contact.</>}
             </p>
             <div className="form-group">
               <label>Reason for rejection</label>
@@ -209,23 +208,23 @@ function Pending() {
       {Object.values(approved).length > 0 && (
         <div className="card" style={{ background: '#e6fff5', border: '1px solid #3ECF8E', marginBottom: '16px' }}>
           <h2 style={{ color: '#0F6E56', marginBottom: '12px' }}>✅ Recently Approved — Send Notification</h2>
-          {Object.values(approved).map(l => (
-            <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(62,207,142,0.2)', flexWrap: 'wrap', gap: '8px' }}>
+          {Object.values(approved).map(s => (
+            <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(62,207,142,0.2)', flexWrap: 'wrap', gap: '8px' }}>
               <div>
-                <div style={{ fontWeight: '600', color: '#1a1a2e', fontSize: '0.875rem' }}>{l.full_name}</div>
-                <div style={{ fontSize: '0.75rem', color: '#666' }}>{l.emergency_contact_name} · {l.emergency_contact_phone}</div>
+                <div style={{ fontWeight: '600', color: '#1a1a2e', fontSize: '0.875rem' }}>{s.full_name}</div>
+                <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.emergency_contact_name} · {s.emergency_contact_phone}</div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button className="btn" style={{ background: '#25D366', color: 'white', padding: '8px 14px', fontSize: '0.75rem' }}
-                  onClick={() => sendWhatsApp(l, approvalMessage(l))}>
+                  onClick={() => sendWhatsApp(s, approvalMessage(s))}>
                   💬 WhatsApp
                 </button>
                 <button className="btn" style={{ background: '#4096ff', color: 'white', padding: '8px 14px', fontSize: '0.75rem' }}
-                  onClick={() => sendEmail(l, `EpiSafe Registration Approved — ${l.full_name}`, approvalMessage(l))}>
+                  onClick={() => sendEmail(s, `EpiSafe Registration Approved — ${s.full_name}`, approvalMessage(s))}>
                   📧 Email
                 </button>
                 <button className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: '0.75rem' }}
-                  onClick={() => dismissApproved(l.id)}>
+                  onClick={() => dismissApproved(s.id)}>
                   ✖️ Don't send
                 </button>
               </div>
@@ -238,24 +237,24 @@ function Pending() {
       {Object.values(rejected).length > 0 && (
         <div className="card" style={{ background: '#fff1f0', border: '1px solid #ffccc7', marginBottom: '16px' }}>
           <h2 style={{ color: '#A32D2D', marginBottom: '12px' }}>❌ Recently Rejected — Send Notification</h2>
-          {Object.values(rejected).map(l => (
-            <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,77,79,0.15)', flexWrap: 'wrap', gap: '8px' }}>
+          {Object.values(rejected).map(s => (
+            <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,77,79,0.15)', flexWrap: 'wrap', gap: '8px' }}>
               <div>
-                <div style={{ fontWeight: '600', color: '#1a1a2e', fontSize: '0.875rem' }}>{l.full_name}</div>
-                <div style={{ fontSize: '0.75rem', color: '#666' }}>{l.emergency_contact_name} · {l.emergency_contact_phone}</div>
-                <div style={{ fontSize: '0.6875rem', color: '#ff4d4f', marginTop: '2px' }}>Reason: {l.reason}</div>
+                <div style={{ fontWeight: '600', color: '#1a1a2e', fontSize: '0.875rem' }}>{s.full_name}</div>
+                <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.emergency_contact_name} · {s.emergency_contact_phone}</div>
+                <div style={{ fontSize: '0.6875rem', color: '#ff4d4f', marginTop: '2px' }}>Reason: {s.reason}</div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button className="btn" style={{ background: '#25D366', color: 'white', padding: '8px 14px', fontSize: '0.75rem' }}
-                  onClick={() => sendWhatsApp(l, rejectionMessage(l, l.reason))}>
+                  onClick={() => sendWhatsApp(s, rejectionMessage(s, s.reason))}>
                   💬 WhatsApp
                 </button>
                 <button className="btn" style={{ background: '#4096ff', color: 'white', padding: '8px 14px', fontSize: '0.75rem' }}
-                  onClick={() => sendEmail(l, `EpiSafe Registration Update — ${l.full_name}`, rejectionMessage(l, l.reason))}>
+                  onClick={() => sendEmail(s, `EpiSafe Registration Update — ${s.full_name}`, rejectionMessage(s, s.reason))}>
                   📧 Email
                 </button>
                 <button className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: '0.75rem' }}
-                  onClick={() => dismissRejected(l.id)}>
+                  onClick={() => dismissRejected(s.id)}>
                   ✖️ Don't send
                 </button>
               </div>
@@ -269,7 +268,7 @@ function Pending() {
         <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
           <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✅</div>
           <h2>All caught up!</h2>
-          <p style={{ color: '#888' }}>No pending registrations to review.</p>
+          <p style={{ color: '#888' }}>No pending staff registrations to review.</p>
         </div>
       ) : (
         <>
@@ -283,38 +282,38 @@ function Pending() {
             <span style={{ fontSize: '0.8125rem', color: '#666' }}>Select all</span>
           </div>
 
-          {pending.map(l => (
-            <div key={l.id} className="card" style={{ marginBottom: '12px' }}>
+          {pending.map(s => (
+            <div key={s.id} className="card" style={{ marginBottom: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                 <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
                   <input
                     type="checkbox"
-                    checked={selected.has(l.id)}
-                    onChange={() => toggleSelect(l.id)}
+                    checked={selected.has(s.id)}
+                    onChange={() => toggleSelect(s.id)}
                     style={{ width: 'auto', margin: 0, marginTop: '4px' }}
                   />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                      <h2 style={{ fontSize: '1rem' }}>{l.full_name}</h2>
-                      {l.action_plan && (
-                        <span style={{ background: riskColor(l.action_plan) + '22', color: riskColor(l.action_plan), border: `1px solid ${riskColor(l.action_plan)}44`, borderRadius: '20px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: '600' }}>
-                          Vulnerability: {l.action_plan} ({vulnScores[l.action_plan] ?? '—'}/10)
+                      <h2 style={{ fontSize: '1rem' }}>{s.full_name}</h2>
+                      {s.risk_level && (
+                        <span style={{ background: riskColor(s.risk_level) + '22', color: riskColor(s.risk_level), border: `1px solid ${riskColor(s.risk_level)}44`, borderRadius: '20px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: '600' }}>
+                          Vulnerability: {s.risk_level} ({vulnScores[s.risk_level] ?? '—'}/10)
                         </span>
                       )}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Grade:</strong> {l.grade || '—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Gender:</strong> {l.class || '—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>School:</strong> {l.triggers || '—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Seizure Type:</strong> {l.seizure_type || '—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Medication:</strong> {l.medication || '—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Contact:</strong> {l.emergency_contact_name || '—'} · {l.emergency_contact_phone || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Staff Type:</strong> {s.staff_type || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Department:</strong> {s.department || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Has Seizures:</strong> {s.has_seizures || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Seizure Type:</strong> {s.seizure_type || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Medication:</strong> {s.medication || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#666' }}><strong>Contact:</strong> {s.emergency_contact_name || '—'} · {s.emergency_contact_phone || '—'}</div>
                     </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                  <button className="btn btn-primary" onClick={() => approve(l)}>✅ Approve</button>
-                  <button className="btn btn-danger" onClick={() => setRejectModal(l)}>❌ Reject</button>
+                  <button className="btn btn-primary" onClick={() => approve(s)}>✅ Approve</button>
+                  <button className="btn btn-danger" onClick={() => setRejectModal(s)}>❌ Reject</button>
                 </div>
               </div>
             </div>
@@ -325,4 +324,4 @@ function Pending() {
   )
 }
 
-export default Pending
+export default StaffPending

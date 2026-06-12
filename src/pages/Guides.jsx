@@ -8,6 +8,7 @@ const guides = [
   { id: 4, title: '🧠 Types of Seizures', summary: 'Recognise different presentations', color: '#f0f0ff', steps: ['Tonic-clonic: body stiffens then jerks rhythmically. Person may fall and lose consciousness.','Absence: brief blank stare, unresponsive for a few seconds. Often mistaken for daydreaming.','Focal: affects one part of the body. Learner may stay conscious but appear confused.','Atonic: sudden loss of muscle tone causing the person to fall without warning.','Myoclonic: sudden brief muscle jerks, often in the arms or upper body.'] },
   { id: 5, title: '⚠️ Triggers & Prevention', summary: 'Reduce seizure risk at school', color: '#fffbe6', steps: ['Missed medication — ensure learners take medication on schedule.','Sleep deprivation — communicate with parents about sleep routines.','Stress and anxiety — identify high-pressure periods and provide support.','Flashing lights — check visual media for photosensitive learners.','Dehydration and skipped meals — encourage regular food and water intake.','Overheating during PE — allow rest breaks and monitor the learner.'] },
   { id: 6, title: '💬 Supporting Learners', summary: 'Reduce stigma and support peers', color: '#fff0f6', steps: ['Talk to the learner privately about their condition.','With consent, inform classmates to reduce fear.','Avoid treating the learner as fragile — include them in activities.','Ensure teachers do not use language that shames the learner.','Debrief classmates calmly after a witnessed seizure.','Encourage the learner to wear a medical alert bracelet.'] },
+  { id: 7, title: '🎥 Epilepsy & Seizure First Aid (Video)', summary: 'Comprehensive video covering seizure types and first aid response', color: '#e6f7ff', type: 'video', videoId: 'z6K8XQQf9ss' },
 ]
 
 function Guides() {
@@ -30,14 +31,32 @@ function Guides() {
         <button className="btn btn-secondary" style={{ marginBottom: '20px' }} onClick={() => setSelected(null)}>← Back to Guides</button>
         <h1>{guide.title}</h1>
         <p style={{ marginBottom: '24px' }}>{guide.summary}</p>
-        <div className="card">
-          {guide.steps.map((step, i) => (
-            <div key={i} style={{ display: 'flex', gap: '14px', marginBottom: '16px', alignItems: 'flex-start' }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#3ECF8E', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '600', flexShrink: 0 }}>{i + 1}</div>
-              <p style={{ color: '#333', lineHeight: '1.6', paddingTop: '4px' }}>{step}</p>
+
+        {guide.type === 'video' ? (
+          <div className="card">
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: '12px', overflow: 'hidden' }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${guide.videoId}`}
+                title={guide.title}
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
-          ))}
-        </div>
+            <p style={{ marginTop: '12px', fontSize: '0.8125rem', color: '#666' }}>
+              Source: Epilepsy Foundation — covers an overview of epilepsy, the different types of seizures, and seizure first aid (Stay. Safe. Side.).
+            </p>
+          </div>
+        ) : (
+          <div className="card">
+            {guide.steps.map((step, i) => (
+              <div key={i} style={{ display: 'flex', gap: '14px', marginBottom: '16px', alignItems: 'flex-start' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#3ECF8E', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: '600', flexShrink: 0 }}>{i + 1}</div>
+                <p style={{ color: '#333', lineHeight: '1.6', paddingTop: '4px' }}>{step}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Prev/Next navigation */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', gap: '12px', marginTop: '16px' }}>
@@ -54,7 +73,7 @@ function Guides() {
           ) : <div style={{ flex: 1 }} />}
         </div>
 
-        <p style={{ textAlign: 'center', color: '#aaa', fontSize: '12px', marginTop: '12px' }}>
+        <p style={{ textAlign: 'center', color: '#aaa', fontSize: '0.75rem', marginTop: '12px' }}>
           Guide {currentIndex + 1} of {guides.length}
         </p>
       </div>
@@ -70,7 +89,7 @@ function Guides() {
           <div key={g.id} className="card" style={{ background: g.color, cursor: 'pointer' }} onClick={() => setSelected(g.id)}>
             <h2 style={{ marginBottom: '8px' }}>{g.title}</h2>
             <p>{g.summary}</p>
-            <p style={{ color: '#3ECF8E', marginTop: '12px', fontWeight: '500' }}>Read guide →</p>
+            <p style={{ color: '#3ECF8E', marginTop: '12px', fontWeight: '500' }}>{g.type === 'video' ? 'Watch video →' : 'Read guide →'}</p>
           </div>
         ))}
       </div>
