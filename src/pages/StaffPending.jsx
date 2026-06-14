@@ -77,6 +77,23 @@ function StaffPending() {
     fetchPending()
   }
 
+  async function deleteAccount(userId) {
+    if (!userId) {
+      return alert("No account ID found for this record (it was registered before this feature was added). You can still delete it manually from Supabase > Authentication > Users.")
+    }
+    if (!confirm('This will permanently delete the login account for this person. They will need to create a new account to register again. Continue?')) return
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId, managerCode: 'EPISAFE2025' }
+      })
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+      alert('✅ Account deleted successfully.')
+    } catch (err) {
+      alert('Error deleting account: ' + err.message)
+    }
+  }
+
   async function confirmReject() {
     if (!selectedReason && !customReason) return alert('Please select or enter a reason')
     const reason = customReason || selectedReason
@@ -244,7 +261,7 @@ function StaffPending() {
                 <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.emergency_contact_name} · {s.emergency_contact_phone}</div>
                 <div style={{ fontSize: '0.6875rem', color: '#ff4d4f', marginTop: '2px' }}>Reason: {s.reason}</div>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button className="btn" style={{ background: '#25D366', color: 'white', padding: '8px 14px', fontSize: '0.75rem' }}
                   onClick={() => sendWhatsApp(s, rejectionMessage(s, s.reason))}>
                   💬 WhatsApp
@@ -256,6 +273,10 @@ function StaffPending() {
                 <button className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: '0.75rem' }}
                   onClick={() => dismissRejected(s.id)}>
                   ✖️ Don't send
+                </button>
+                <button className="btn btn-danger" style={{ padding: '8px 14px', fontSize: '0.75rem' }}
+                  onClick={() => deleteAccount(s.user_id)}>
+                  🗑️ Delete Account
                 </button>
               </div>
             </div>
@@ -311,9 +332,10 @@ function StaffPending() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
                   <button className="btn btn-primary" onClick={() => approve(s)}>✅ Approve</button>
                   <button className="btn btn-danger" onClick={() => setRejectModal(s)}>❌ Reject</button>
+                  <button className="btn btn-secondary" onClick={() => deleteAccount(s.user_id)}>🗑️ Delete Account</button>
                 </div>
               </div>
             </div>

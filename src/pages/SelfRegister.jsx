@@ -86,6 +86,10 @@ function SelfRegister({ session, onLogout }) {
     navigate('/')
   }
 
+  function goToGuides() {
+    navigate('/guides')
+  }
+
   const selectedSeizure = seizureTypes.find(s => s.value === form.seizure_type)
   const schoolList = selectedZone ? schoolsByZone[selectedZone] : []
 
@@ -105,7 +109,7 @@ function SelfRegister({ session, onLogout }) {
       action_plan: level,
       status: level === 'High' || level === 'Moderate' ? 'review' : 'pending',
     }
-    const { error: dbError } = await supabase.from('learners').insert([finalForm])
+    const { error: dbError } = await supabase.from('learners').insert([{ ...finalForm, user_id: session.user.id }])
     await supabase.from('screener_responses').insert([{
       learner_name: form.full_name,
       grade: form.grade,
@@ -145,7 +149,10 @@ function SelfRegister({ session, onLogout }) {
               </p>
             )}
           </div>
-          <button className="btn btn-primary" onClick={onLogout}>Done</button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={goToGuides}>📖 Guides</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={onLogout}>Done</button>
+          </div>
         </div>
       </div>
     )
@@ -155,6 +162,10 @@ function SelfRegister({ session, onLogout }) {
     <div style={{ minHeight: '100vh', background: '#f0f4f8', padding: '20px' }}>
       <button onClick={goHome} style={{ position: 'fixed', top: '16px', left: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
         🏠 Home
+      </button>
+
+      <button onClick={goToGuides} style={{ position: 'fixed', top: '16px', right: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        📖 Guides
       </button>
 
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>

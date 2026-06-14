@@ -5,6 +5,13 @@ import { supabase } from '../supabase'
 const MANAGER_SECRET = 'EPISAFE2025'
 const staffTypes = ['Teacher', 'Support Staff', 'Attendants', 'Administrative Staff']
 
+const schoolsByZone = {
+  'Zone 1': ['Adolphe de Plevitz SSS','James Burty David SSS','Droopnath Ramphul State College','Frank Richard SSS','Goodlands SSS','Lady Sushil Ramgoolam SSS','Pailles SSS','Pamplemousses SSS','Piton SC','Port Louis North SSS','Port Louis SSS','G. M. Dawjee Atchia State College','Prof. Hassan Raffa SSS','Rabindranath Tagore SSS','Ramsoondur Prayag SSS','R. Seeneevassen SSS','Riviere du Rempart SSS','Royal College Port Louis','Sharma Jugdambi SSS','Shri Beekrumsingh Ramlallah SSS','Sir A. R. Mohamed SSS','Terre Rouge SSS','Triolet SSS','Alpha College','Bhujoharry College','BPS Fatima College','Bradley College','College Ideal','College Pere Laval','Cosmopolitain College','DAV HSC College','DAV College','Labourdonnais College','Friendship College (Boys)','Friendship College (Girls)','International College','Islamic Cultural College','Islamic Cultural Form VI College','London College','Loreto College Port Louis','Madad Ul Islam Girls College','Merton College','Muslim Girls College','Pamplemousses High School','Port Louis High School','S Munrakhun College',"Saint Bartholomew's College",'Universal College'],
+  'Zone 2': ['Beau Bassin SSS','Bel Air Riviere Seche SSS','Bon Accueil State College','Camp de Masque State College','Ebene SSS (Boys)','Ebene SSS (Girls)','John Kennedy College','Mahatma Gandhi Institute','Mahatma Gandhi SS Centre de Flacq','Mahatma Gandhi SS Moka','Manilall Doctor SSS','Marcel Cabon SSS','Quartier Militaire SSS','Queen Elizabeth College','Rajcoomar Gujadhur SSS','Sebastopol SSS','Shrimati Indira Gandhi SSS','Sir Leckraz Teelock SSS','Byron College','La Confiance College','College des Ville Soeurs','Loreto College Rose Hill','Rose Hill Muslim College','Royal College Curepipe','Royal College Beau Bassin',"St Andrew's College",'St Joseph College',"St Mary's College",'Vieux Grand Port SSS','Sodnac SSS'],
+  'Zone 3': ['Curepipe College','Bel Ombre SSS','Chemin Grenier SSS','Henrietta SSS','Mahebourg SSS',"Mare d'Albert SSS",'New Eben Ezer SSS','Phoenix SSS','Plaine Magnien SSS','Riviere des Anguilles State College','Rose Belle SSS','Sookdeo Bissoondoyal State College','Stanley College','Surinam SSS','Tyack SSS','Wooton SSS','Loreto College Curepipe','St Gabriel College','St Esprit College','Sodnac College','Nouvelle France College','Savanne College','Grand Bois College'],
+  'Zone 4': ['Bambous SSS','Cascades SSS','Ecole du Centre SSS','Floreal SSS','Forest Side SSS','Quatre Bornes SSS','Royal College Rose Hill','Vacoas SSS','Highlands College','Belle Rose SSS','Tamarin SSS','Black River SSS','Flic en Flac SSS','Petite Riviere SSS','Dr Regis Chaperon SSS','Loreto College Quatre Bornes','St Andrews College','Clavis College','Savannah College'],
+}
+
 function Login({ onLogin }) {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -12,15 +19,22 @@ function Login({ onLogin }) {
   const [role, setRole] = useState('learner')
   const [staffType, setStaffType] = useState('')
   const [managerCode, setManagerCode] = useState('')
+  const [selectedZone, setSelectedZone] = useState('')
+  const [school, setSchool] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const schoolList = selectedZone ? schoolsByZone[selectedZone] : []
 
   async function handleSubmit() {
     if (!email || !password) return setError('Please enter email and password')
     if (isSignUp && role === 'staff' && !staffType) return setError('Please select your staff type')
     if (isSignUp && role === 'manager' && managerCode !== MANAGER_SECRET) {
       return setError('Invalid manager code. Please contact your administrator.')
+    }
+    if (isSignUp && role === 'manager' && (!selectedZone || !school)) {
+      return setError('Please select your zone and school')
     }
     setLoading(true)
     setError('')
@@ -29,7 +43,14 @@ function Login({ onLogin }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { role, staff_type: role === 'staff' ? staffType : null } }
+        options: {
+          data: {
+            role,
+            staff_type: role === 'staff' ? staffType : null,
+            zone: role === 'manager' ? selectedZone : null,
+            school: role === 'manager' ? school : null,
+          }
+        }
       })
       if (error) setError(error.message)
       else setError('Account created! You can now log in.')
@@ -45,6 +66,8 @@ function Login({ onLogin }) {
     setRole(newRole)
     setStaffType('')
     setManagerCode('')
+    setSelectedZone('')
+    setSchool('')
   }
 
   return (
@@ -91,11 +114,32 @@ function Login({ onLogin }) {
             )}
 
             {role === 'manager' && (
-              <div className="form-group">
-                <label>Manager Secret Code</label>
-                <input type="password" value={managerCode} onChange={e => setManagerCode(e.target.value)} placeholder="Enter secret code provided by administrator" />
-                <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '-8px' }}>Contact your school administrator for this code.</p>
-              </div>
+              <>
+                <div className="form-group">
+                  <label>Manager Secret Code</label>
+                  <input type="password" value={managerCode} onChange={e => setManagerCode(e.target.value)} placeholder="Enter secret code provided by administrator" />
+                  <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '-8px' }}>Contact your school administrator for this code.</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
+                  <div className="form-group">
+                    <label>Zone</label>
+                    <select value={selectedZone} onChange={e => { setSelectedZone(e.target.value); setSchool('') }}>
+                      <option value="">-- Select zone --</option>
+                      <option value="Zone 1">Zone 1 — Port Louis & North</option>
+                      <option value="Zone 2">Zone 2 — East & Central</option>
+                      <option value="Zone 3">Zone 3 — South & South East</option>
+                      <option value="Zone 4">Zone 4 — West & Highlands</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>School</label>
+                    <select value={school} onChange={e => setSchool(e.target.value)} disabled={!selectedZone}>
+                      <option value="">{selectedZone ? '-- Select school --' : '-- Select zone first --'}</option>
+                      {schoolList.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         )}

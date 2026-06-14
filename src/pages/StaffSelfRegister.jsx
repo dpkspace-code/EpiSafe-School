@@ -35,6 +35,13 @@ const departments = [
   'Laboratory (Lab Technician)', 'Other',
 ]
 
+const schoolsByZone = {
+  'Zone 1': ['Adolphe de Plevitz SSS','James Burty David SSS','Droopnath Ramphul State College','Frank Richard SSS','Goodlands SSS','Lady Sushil Ramgoolam SSS','Pailles SSS','Pamplemousses SSS','Piton SC','Port Louis North SSS','Port Louis SSS','G. M. Dawjee Atchia State College','Prof. Hassan Raffa SSS','Rabindranath Tagore SSS','Ramsoondur Prayag SSS','R. Seeneevassen SSS','Riviere du Rempart SSS','Royal College Port Louis','Sharma Jugdambi SSS','Shri Beekrumsingh Ramlallah SSS','Sir A. R. Mohamed SSS','Terre Rouge SSS','Triolet SSS','Alpha College','Bhujoharry College','BPS Fatima College','Bradley College','College Ideal','College Pere Laval','Cosmopolitain College','DAV HSC College','DAV College','Labourdonnais College','Friendship College (Boys)','Friendship College (Girls)','International College','Islamic Cultural College','Islamic Cultural Form VI College','London College','Loreto College Port Louis','Madad Ul Islam Girls College','Merton College','Muslim Girls College','Pamplemousses High School','Port Louis High School','S Munrakhun College',"Saint Bartholomew's College",'Universal College'],
+  'Zone 2': ['Beau Bassin SSS','Bel Air Riviere Seche SSS','Bon Accueil State College','Camp de Masque State College','Ebene SSS (Boys)','Ebene SSS (Girls)','John Kennedy College','Mahatma Gandhi Institute','Mahatma Gandhi SS Centre de Flacq','Mahatma Gandhi SS Moka','Manilall Doctor SSS','Marcel Cabon SSS','Quartier Militaire SSS','Queen Elizabeth College','Rajcoomar Gujadhur SSS','Sebastopol SSS','Shrimati Indira Gandhi SSS','Sir Leckraz Teelock SSS','Byron College','La Confiance College','College des Ville Soeurs','Loreto College Rose Hill','Rose Hill Muslim College','Royal College Curepipe','Royal College Beau Bassin',"St Andrew's College",'St Joseph College',"St Mary's College",'Vieux Grand Port SSS','Sodnac SSS'],
+  'Zone 3': ['Curepipe College','Bel Ombre SSS','Chemin Grenier SSS','Henrietta SSS','Mahebourg SSS',"Mare d'Albert SSS",'New Eben Ezer SSS','Phoenix SSS','Plaine Magnien SSS','Riviere des Anguilles State College','Rose Belle SSS','Sookdeo Bissoondoyal State College','Stanley College','Surinam SSS','Tyack SSS','Wooton SSS','Loreto College Curepipe','St Gabriel College','St Esprit College','Sodnac College','Nouvelle France College','Savanne College','Grand Bois College'],
+  'Zone 4': ['Bambous SSS','Cascades SSS','Ecole du Centre SSS','Floreal SSS','Forest Side SSS','Quatre Bornes SSS','Royal College Rose Hill','Vacoas SSS','Highlands College','Belle Rose SSS','Tamarin SSS','Black River SSS','Flic en Flac SSS','Petite Riviere SSS','Dr Regis Chaperon SSS','Loreto College Quatre Bornes','St Andrews College','Clavis College','Savannah College'],
+}
+
 const screeningQuestions = [
   { id: 'sq1', text: 'Have you ever had a seizure or convulsion as an adult?', options: ['Never', 'Once', '2-5 times', 'More than 5 times'], weights: [0, 3, 5, 7] },
   { id: 'sq2', text: 'Have you been diagnosed with epilepsy by a doctor?', options: ['No', 'Under investigation', 'Yes — recently', 'Yes — long standing'], weights: [0, 3, 5, 6] },
@@ -62,12 +69,14 @@ function calcRiskLevel(answers) {
 function StaffSelfRegister({ session, onLogout }) {
   const navigate = useNavigate()
   const [step, setStep] = useState(1) // 1=personal, 2=medical, 3=screening, 4=emergency
+  const [selectedZone, setSelectedZone] = useState('')
   const [screenAnswers, setScreenAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     full_name: '', staff_type: session?.user?.user_metadata?.staff_type || '', department: '',
+    zone: '', school: '',
     has_seizures: '', seizure_type: '', medication: '',
     emergency_contact_name: '', emergency_contact_phone: '',
     emergency_contact_email: '', status: 'pending'
@@ -78,7 +87,12 @@ function StaffSelfRegister({ session, onLogout }) {
     navigate('/')
   }
 
+  function goToGuides() {
+    navigate('/guides')
+  }
+
   const selectedSeizure = seizureTypes.find(s => s.value === form.seizure_type)
+  const schoolList = selectedZone ? schoolsByZone[selectedZone] : []
 
   function setScreenAnswer(id, optionIndex, weight) {
     setScreenAnswers(prev => ({ ...prev, [id]: { index: optionIndex, weight } }))
@@ -93,11 +107,12 @@ function StaffSelfRegister({ session, onLogout }) {
     const { level, score } = calcRiskLevel(screenAnswers)
     const finalForm = {
       ...form,
+      zone: selectedZone,
       risk_level: level,
       risk_score: score,
       status: 'pending',
     }
-    const { error: dbError } = await supabase.from('staff_registry').insert([finalForm])
+    const { error: dbError } = await supabase.from('staff_registry').insert([{ ...finalForm, user_id: session.user.id }])
     if (dbError) setError('Error: ' + dbError.message)
     else setSubmitted(true)
     setSaving(false)
@@ -130,7 +145,10 @@ function StaffSelfRegister({ session, onLogout }) {
               </p>
             )}
           </div>
-          <button className="btn btn-primary" onClick={onLogout}>Done</button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={goToGuides}>📖 Guides</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={onLogout}>Done</button>
+          </div>
         </div>
       </div>
     )
@@ -140,6 +158,10 @@ function StaffSelfRegister({ session, onLogout }) {
     <div style={{ minHeight: '100vh', background: '#f0f4f8', padding: '20px' }}>
       <button onClick={goHome} style={{ position: 'fixed', top: '16px', left: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
         🏠 Home
+      </button>
+
+      <button onClick={goToGuides} style={{ position: 'fixed', top: '16px', right: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        📖 Guides
       </button>
 
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -173,7 +195,7 @@ function StaffSelfRegister({ session, onLogout }) {
           <div className="card">
             <h2 style={{ marginBottom: '16px' }}>👤 Personal Details</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-              <div className="form-group">
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label>Full Name *</label>
                 <input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} placeholder="Your full name" />
               </div>
@@ -184,16 +206,33 @@ function StaffSelfRegister({ session, onLogout }) {
                   {staffTypes.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <div className="form-group">
                 <label>Department / Subject (optional)</label>
                 <select value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}>
                   <option value="">-- Select department --</option>
                   {departments.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
+              <div className="form-group">
+                <label>Zone *</label>
+                <select value={selectedZone} onChange={e => { setSelectedZone(e.target.value); setForm({ ...form, school: '' }) }}>
+                  <option value="">-- Select zone --</option>
+                  <option value="Zone 1">Zone 1 — Port Louis & North</option>
+                  <option value="Zone 2">Zone 2 — East & Central</option>
+                  <option value="Zone 3">Zone 3 — South & South East</option>
+                  <option value="Zone 4">Zone 4 — West & Highlands</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>School *</label>
+                <select value={form.school} onChange={e => setForm({ ...form, school: e.target.value })} disabled={!selectedZone}>
+                  <option value="">{selectedZone ? '-- Select school --' : '-- Select zone first --'}</option>
+                  {schoolList.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
             </div>
             <button className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }}
-              onClick={() => { if (!form.full_name || !form.staff_type) return setError('Please fill in name and staff type'); setError(''); setStep(2) }}>
+              onClick={() => { if (!form.full_name || !form.staff_type || !selectedZone || !form.school) return setError('Please fill in name, staff type, zone and school'); setError(''); setStep(2) }}>
               Next →
             </button>
           </div>

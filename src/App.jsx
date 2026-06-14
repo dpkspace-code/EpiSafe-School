@@ -12,7 +12,6 @@ import StaffSelfRegister from './pages/StaffSelfRegister'
 import Pending from './pages/Pending'
 import StaffPending from './pages/StaffPending'
 import StaffRegistry from './pages/StaffRegistry'
-import FontPicker, { applyStoredFont } from './FontPicker'
 import './App.css'
 
 function App() {
@@ -21,10 +20,6 @@ function App() {
   const [userRole, setUserRole] = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
   const [staffPendingCount, setStaffPendingCount] = useState(0)
-
-  useEffect(() => {
-    applyStoredFont()
-  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -81,26 +76,27 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={
-          session ? <Navigate to="/app" replace /> : <><Landing /><FontPicker /></>
+          session ? <Navigate to="/app" replace /> : <Landing />
         } />
 
         <Route path="/login" element={
           session ? <Navigate to="/app" replace /> : (
-            <>
-              <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => {
-                setSession(session)
-                setUserRole(session.user.user_metadata?.role || 'learner')
-              })} />
-              <FontPicker />
-            </>
+            <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => {
+              setSession(session)
+              setUserRole(session.user.user_metadata?.role || 'learner')
+            })} />
           )
         } />
 
         <Route path="/register" element={
           !session ? <Navigate to="/login" replace /> :
-          userRole === 'learner' ? <><SelfRegister session={session} onLogout={handleLogout} /><FontPicker /></> :
-          userRole === 'staff' ? <><StaffSelfRegister session={session} onLogout={handleLogout} /><FontPicker /></> :
+          userRole === 'learner' ? <SelfRegister session={session} onLogout={handleLogout} /> :
+          userRole === 'staff' ? <StaffSelfRegister session={session} onLogout={handleLogout} /> :
           <Navigate to="/app" replace />
+        } />
+
+        <Route path="/guides" element={
+          !session ? <Navigate to="/login" replace /> : <GuidesPage />
         } />
 
         <Route path="/app/*" element={
@@ -119,6 +115,20 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+  )
+}
+
+function GuidesPage() {
+  const navigate = useNavigate()
+  return (
+    <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
+        <button className="btn btn-secondary" style={{ marginBottom: '16px' }} onClick={() => navigate(-1)}>
+          ← Back
+        </button>
+        <Guides />
+      </div>
+    </div>
   )
 }
 
@@ -143,15 +153,14 @@ function ManagerLayout({ session, pendingCount, staffPendingCount, fetchPendingC
           <button className="nav-btn" onClick={goHome}>🏠 Home</button>
           <Link className={isActive('dashboard')} to="/app/dashboard">📊 Dashboard</Link>
           <Link className={isActive('screener')} to="/app/screener">📋 Screener</Link>
-          <Link className={isActive('registry')} to="/app/registry">👥 Registry</Link>
-          <Link className={isActive('guides')} to="/app/guides">📖 Guides</Link>
+          <Link className={isActive('registry')} to="/app/registry">👥 Learner Registry</Link>
           <Link
             className={isActive('pending')}
             to="/app/pending"
             onClick={fetchPendingCount}
             style={{ color: pendingCount > 0 ? '#fa8c16' : '' }}
           >
-            ⏳ Pending {pendingCount > 0 ? `(${pendingCount})` : ''}
+            ⏳ Learner Pending {pendingCount > 0 ? `(${pendingCount})` : ''}
           </Link>
 
           <div style={{ height: '1px', background: '#2a2a4e', margin: '8px 0' }} />
@@ -165,10 +174,12 @@ function ManagerLayout({ session, pendingCount, staffPendingCount, fetchPendingC
           >
             ⏳ Staff Pending {staffPendingCount > 0 ? `(${staffPendingCount})` : ''}
           </Link>
+
+          <div style={{ height: '1px', background: '#2a2a4e', margin: '8px 0' }} />
+
+          <Link className={isActive('guides')} to="/app/guides">📖 Guides</Link>
         </nav>
         <div style={{ marginTop: 'auto', padding: '20px 12px' }}>
-          <FontPicker floating={false} />
-          <div style={{ height: '12px' }} />
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px', paddingLeft: '4px' }}>👤 Manager</div>
           <div style={{ fontSize: '11px', color: '#555', marginBottom: '8px', paddingLeft: '4px' }}>{session.user.email}</div>
           <button className="nav-btn" style={{ color: '#ff4d4f', width: '100%' }} onClick={onLogout}>🚪 Logout</button>

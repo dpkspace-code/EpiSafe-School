@@ -64,6 +64,7 @@ function Registry() {
   const [search, setSearch] = useState('')
   const [selectedZone, setSelectedZone] = useState('')
   const [selectedActions, setSelectedActions] = useState([...actionSteps])
+  const [selectedIds, setSelectedIds] = useState([])
   const [form, setForm] = useState({
     full_name: '', grade: '', class: '', seizure_type: '',
     medication: '', triggers: '', emergency_contact_name: '',
@@ -76,6 +77,7 @@ function Registry() {
     setLoading(true)
     const { data } = await supabase.from('learners').select('*').order('created_at', { ascending: false })
     setLearners(data || [])
+    setSelectedIds([])
     setLoading(false)
   }
 
@@ -103,6 +105,25 @@ function Registry() {
   async function deleteLearner(id) {
     if (!confirm('Are you sure?')) return
     await supabase.from('learners').delete().eq('id', id)
+    fetchLearners()
+  }
+
+  function toggleSelect(id) {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.length === filteredLearners.length) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(filteredLearners.map(l => l.id))
+    }
+  }
+
+  async function deleteSelected() {
+    if (selectedIds.length === 0) return
+    if (!confirm(`Are you sure you want to remove ${selectedIds.length} selected case${selectedIds.length > 1 ? 's' : ''}?`)) return
+    await supabase.from('learners').delete().in('id', selectedIds)
     fetchLearners()
   }
 
@@ -153,6 +174,8 @@ function Registry() {
 
   const vulnColors = { High: '#ff4d4f', Moderate: '#fa8c16', 'Low-Moderate': '#fadb14', Low: '#3ECF8E' }
   const vulnScores = { High: 9, Moderate: 6, 'Low-Moderate': 4, Low: 2 }
+
+  const allSelected = filteredLearners.length > 0 && selectedIds.length === filteredLearners.length
 
   return (
     <div>
@@ -285,6 +308,18 @@ function Registry() {
 
       <div className="card">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search by name, grade or seizure type..." style={{ marginBottom: '16px' }} />
+
+        {selectedIds.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', color: '#A32D2D', fontWeight: '500' }}>
+              {selectedIds.length} case{selectedIds.length > 1 ? 's' : ''} selected
+            </span>
+            <button className="btn btn-danger" style={{ padding: '6px 14px', fontSize: '12px' }} onClick={deleteSelected}>
+              🗑️ Delete Selected
+            </button>
+          </div>
+        )}
+
         {loading ? <p>Loading...</p> : filteredLearners.length === 0 ? (
           <p style={{ textAlign: 'center', padding: '40px', color: '#aaa' }}>
             {search ? 'No learners found matching your search.' : 'No learners in registry yet.'}
@@ -293,6 +328,9 @@ function Registry() {
           <table>
             <thead>
               <tr>
+                <th style={{ width: '36px' }}>
+                  <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ width: 'auto', margin: 0 }} />
+                </th>
                 <th>Name</th><th>Grade</th><th>Seizure Type</th><th>Vulnerability</th><th>Emergency Contact</th><th>Status</th><th></th>
               </tr>
             </thead>
@@ -301,6 +339,9 @@ function Registry() {
                 const vulnLevel = l.action_plan && vulnColors[l.action_plan] ? l.action_plan : null
                 return (
                   <tr key={l.id}>
+                    <td>
+                      <input type="checkbox" checked={selectedIds.includes(l.id)} onChange={() => toggleSelect(l.id)} style={{ width: 'auto', margin: 0 }} />
+                    </td>
                     <td><strong>{l.full_name}</strong></td>
                     <td>{l.grade}</td>
                     <td>{l.seizure_type || '—'}</td>
