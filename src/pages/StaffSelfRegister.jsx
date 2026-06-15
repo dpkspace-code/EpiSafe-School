@@ -26,10 +26,15 @@ const medications = [
 const staffTypes = ['Teacher', 'Support Staff', 'Attendants', 'Administrative Staff']
 
 const departments = [
-  'English', 'French', 'Mathematics', 'Sciences (Biology/Physics/Chemistry)',
-  'History & Geography', 'Economics', 'Accounting / Business Studies',
-  'Computer Science / IT', 'Art & Design', 'Music', 'Physical Education (PE)',
-  'Hindi / Asian Languages', 'Literature in English',
+  'English', 'French', 'Mathematics', 'Additional Mathematics',
+  'Science', 'Biology', 'Chemistry', 'Physics',
+  'History', 'Geography', 'Economics', 'Sociology',
+  'Accounting', 'Business Studies / Enterprise',
+  'Computer Science / IT', 'Art & Design', 'Music', 'Drama',
+  'Physical Education (PE)', 'Literature in English',
+  'Design & Technology', 'Food & Nutrition / Textiles',
+  'Religious Education / Moral Education',
+  'Hindi', 'Tamil', 'Telugu', 'Urdu', 'Arabic', 'Mandarin (Chinese)',
   'Administration', 'Library', 'Canteen', 'Health Office / Sick Bay',
   'Security', 'Maintenance / Facilities', 'Counselling / Welfare',
   'Laboratory (Lab Technician)', 'Other',
