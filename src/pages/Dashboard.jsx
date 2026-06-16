@@ -123,7 +123,10 @@ function Dashboard() {
 
   return (
     <div>
-      <h1>🧠 EpiSafe School</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+        <img src="/episafe_icon_512.png" alt="EpiSafe School" style={{ width: '44px', height: '44px', borderRadius: '10px', objectFit: 'cover' }} />
+        <h1 style={{ margin: 0 }}>EpiSafe School</h1>
+      </div>
       <p style={{ marginBottom: '24px' }}>Epilepsy management dashboard</p>
 
       {/* Stats */}

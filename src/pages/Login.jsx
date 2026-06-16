@@ -78,7 +78,9 @@ function Login({ onLogin }) {
 
       <div style={{ background: 'white', borderRadius: '16px', padding: '40px', width: '100%', maxWidth: '420px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🧠</div>
+          <div style={{ marginBottom: '12px' }}>
+            <img src="/episafe_icon_512.png" alt="EpiSafe School" style={{ width: '72px', height: '72px', borderRadius: '16px', objectFit: 'cover', boxShadow: '0 4px 16px rgba(150,80,220,0.35)' }} />
+          </div>
           <h1 style={{ fontSize: '1.5rem', color: '#1a1a2e', marginBottom: '6px' }}>EpiSafe School</h1>
           <p style={{ color: '#888', fontSize: '0.875rem', textTransform: 'uppercase' }}>Epilepsy management for Mauritian schools</p>
         </div>
