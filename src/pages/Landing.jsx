@@ -1,7 +1,28 @@
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 
 function Landing() {
   const navigate = useNavigate()
+  const [installPrompt, setInstallPrompt] = useState(null)
+  const [installed, setInstalled] = useState(false)
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault()
+      setInstallPrompt(e)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    window.addEventListener('appinstalled', () => setInstalled(true))
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  const handleInstall = async () => {
+    if (!installPrompt) return
+    installPrompt.prompt()
+    const { outcome } = await installPrompt.userChoice
+    if (outcome === 'accepted') setInstalled(true)
+    setInstallPrompt(null)
+  }
 
   return (
     <div style={{
@@ -41,8 +62,21 @@ function Landing() {
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '900px' }}>
 
-        {/* Title */}
-        <div style={{ fontSize: '4.5rem', marginBottom: '16px', filter: 'drop-shadow(0 0 20px rgba(62,207,142,0.8))' }}>🧠</div>
+        {/* Logo */}
+        <div style={{ marginBottom: '20px' }}>
+          <img
+            src="/episafe_icon_512.png"
+            alt="EpiSafe School"
+            style={{
+              width: '110px',
+              height: '110px',
+              borderRadius: '24px',
+              objectFit: 'cover',
+              boxShadow: '0 0 40px rgba(150,80,220,0.7)',
+            }}
+          />
+        </div>
+
         <h1 style={{ color: 'white', fontSize: '3rem', fontWeight: '700', marginBottom: '8px', textShadow: '0 0 40px rgba(62,207,142,0.4)' }}>EpiSafe School</h1>
         <div style={{ width: '80px', height: '3px', background: 'linear-gradient(90deg, #3ECF8E, transparent)', borderRadius: '2px', margin: '0 auto 12px' }} />
         <p style={{ color: '#3ECF8E', fontSize: '1.125rem', marginBottom: '48px', fontWeight: '500', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Epilepsy Management for Secondary Schools: MAURITIUS</p>
@@ -69,12 +103,46 @@ function Landing() {
         </div>
 
         {/* Get started button */}
-        <button onClick={() => navigate('/login')} style={{ background: 'linear-gradient(135deg, #3ECF8E, #2db87a)', color: 'white', border: 'none', borderRadius: '14px', padding: '16px 52px', fontSize: '1.125rem', fontWeight: '600', cursor: 'pointer', boxShadow: '0 0 30px rgba(62,207,142,0.4)', marginBottom: '12px' }}>
+        <button onClick={() => navigate('/login')} style={{ background: 'linear-gradient(135deg, #3ECF8E, #2db87a)', color: 'white', border: 'none', borderRadius: '14px', padding: '16px 52px', fontSize: '1.125rem', fontWeight: '600', cursor: 'pointer', boxShadow: '0 0 30px rgba(62,207,142,0.4)', marginBottom: '16px' }}>
           Get Started →
         </button>
-        <p style={{ color: '#567', fontSize: '0.8125rem', marginBottom: '40px' }}>Login or create an account to continue</p>
 
-        {/* Badge pills — bottom row, non-clickable info tags */}
+        {/* Install App button */}
+        {!installed && installPrompt && (
+          <div style={{ marginBottom: '32px' }}>
+            <button
+              onClick={handleInstall}
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '14px',
+                padding: '12px 32px',
+                fontSize: '0.9375rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              📲 Install App
+            </button>
+            <p style={{ color: '#567', fontSize: '0.75rem', marginTop: '6px' }}>Add to your home screen for quick access</p>
+          </div>
+        )}
+
+        {installed && (
+          <p style={{ color: '#3ECF8E', fontSize: '0.875rem', marginBottom: '32px' }}>✅ App installed successfully!</p>
+        )}
+
+        {!installPrompt && !installed && (
+          <p style={{ color: '#567', fontSize: '0.75rem', marginBottom: '32px' }}>
+            To install: tap your browser menu → <em>Add to Home Screen</em>
+          </p>
+        )}
+
+        {/* Badge pills — bottom row */}
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {[
             '🇲🇺 Designed for Mauritius',

@@ -146,7 +146,11 @@ function ManagerLayout({ session, pendingCount, staffPendingCount, fetchPendingC
     <div className="app">
       <div className="sidebar">
         <div className="logo">
-          <span className="logo-icon">🧠</span>
+          <img
+            src="/episafe_icon_512.png"
+            alt="EpiSafe School"
+            style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover' }}
+          />
           <span className="logo-text">EpiSafe School</span>
         </div>
         <nav>
