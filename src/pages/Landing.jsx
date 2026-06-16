@@ -44,7 +44,7 @@ function Landing() {
         <div style={{ fontSize: '4.5rem', marginBottom: '16px', filter: 'drop-shadow(0 0 20px rgba(62,207,142,0.8))' }}>🧠</div>
         <h1 style={{ color: 'white', fontSize: '3rem', fontWeight: '700', marginBottom: '8px', textShadow: '0 0 40px rgba(62,207,142,0.4)' }}>EpiSafe School</h1>
         <div style={{ width: '80px', height: '3px', background: 'linear-gradient(90deg, #3ECF8E, transparent)', borderRadius: '2px', margin: '0 auto 12px' }} />
-        <p style={{ color: '#3ECF8E', fontSize: '1.125rem', marginBottom: '48px', fontWeight: '500', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Epilepsy management for Mauritian schools</p>
+        <p style={{ color: '#3ECF8E', fontSize: '1.125rem', marginBottom: '48px', fontWeight: '500', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Epilepsy Management for Secondary Schools: MAURITIUS</p>
 
         {/* Feature cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '48px' }}>
