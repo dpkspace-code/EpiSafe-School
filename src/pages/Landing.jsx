@@ -19,38 +19,6 @@ function Landing() {
   boxSizing: 'border-box',
 }}>
 
-      {/* CC Health Club Logo — top-right corner */}
-      <div style={{
-        position: 'fixed',
-        top: '16px',
-        right: '20px',
-        zIndex: 100,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '4px',
-      }}>
-        <img
-          src="/cc_health_club_logo.png"
-          alt="CC Health Club"
-          style={{
-            width: '72px',
-            height: 'auto',
-            filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))',
-          }}
-        />
-        <span style={{
-          color: 'rgba(255,255,255,0.6)',
-          fontSize: '0.55rem',
-          fontWeight: '600',
-          letterSpacing: '0.05em',
-          textTransform: 'uppercase',
-          lineHeight: '1.2',
-          textAlign: 'center',
-          maxWidth: '80px',
-        }}>Curepipe College</span>
-      </div>
-
       {/* Decorative circles */}
       <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(62,207,142,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '-100px', left: '-100px', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(24,95,165,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
