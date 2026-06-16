@@ -224,7 +224,7 @@ function Dashboard() {
       <div className="card">
         <h2>About EpiSafe</h2>
         <p style={{ lineHeight: '1.7' }}>
-          EpiSafe helps schools identify learners at risk of seizures, maintain a secure epilepsy registry,
+          EpiSafe helps schools identify learners and staff members at risk of seizures, maintain a secure epilepsy registry,
           and equip staff with the knowledge to respond effectively.
         </p>
       </div>
