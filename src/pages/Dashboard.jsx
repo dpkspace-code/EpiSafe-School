@@ -8,51 +8,92 @@ function Dashboard() {
   const [screeningCount, setScreeningCount] = useState(0)
   const [highRiskCount, setHighRiskCount] = useState(0)
   const [pendingCount, setPendingCount] = useState(0)
+  const [staffCount, setStaffCount] = useState(0)
   const [seizureData, setSeizureData] = useState([])
   const [triggerData, setTriggerData] = useState([])
+  const [resetting, setResetting] = useState(false)
 
-  useEffect(() => {
-    async function fetchStats() {
-      const { count: lCount } = await supabase
-        .from('learners').select('*', { count: 'exact', head: true })
-        .eq('status', 'active')
+  useEffect(() => { fetchStats() }, [])
 
-      const { count: sCount } = await supabase
-        .from('screener_responses').select('*', { count: 'exact', head: true })
+  async function fetchStats() {
+    const { count: lCount } = await supabase
+      .from('learners').select('*', { count: 'exact', head: true })
+      .eq('status', 'active')
 
-      const { count: hCount } = await supabase
-        .from('screener_responses').select('*', { count: 'exact', head: true })
-        .eq('risk_level', 'High')
+    const { count: sCount } = await supabase
+      .from('screener_responses').select('*', { count: 'exact', head: true })
 
-      const { count: pCount } = await supabase
-        .from('learners').select('*', { count: 'exact', head: true })
-        .eq('status', 'pending')
+    const { count: hCount } = await supabase
+      .from('screener_responses').select('*', { count: 'exact', head: true })
+      .eq('risk_level', 'High')
 
-      const { data: learners } = await supabase
-        .from('learners').select('seizure_type, triggers')
-        .eq('status', 'active')
+    const { count: pCount } = await supabase
+      .from('learners').select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
 
-      setLearnerCount(lCount || 0)
-      setScreeningCount(sCount || 0)
-      setHighRiskCount(hCount || 0)
-      setPendingCount(pCount || 0)
+    const { count: stCount } = await supabase
+      .from('staff_registry').select('*', { count: 'exact', head: true })
+      .eq('status', 'active')
 
-      if (learners) {
-        const seizureCounts = {}
-        learners.forEach(l => {
-          if (l.seizure_type) seizureCounts[l.seizure_type] = (seizureCounts[l.seizure_type] || 0) + 1
-        })
-        setSeizureData(Object.entries(seizureCounts).map(([name, count]) => ({ name, count })))
+    const { data: learners } = await supabase
+      .from('learners').select('seizure_type, triggers')
+      .eq('status', 'active')
 
-        const triggerCounts = {}
-        learners.forEach(l => {
-          if (l.triggers) triggerCounts[l.triggers] = (triggerCounts[l.triggers] || 0) + 1
-        })
-        setTriggerData(Object.entries(triggerCounts).map(([name, count]) => ({ name, count })))
-      }
+    setLearnerCount(lCount || 0)
+    setScreeningCount(sCount || 0)
+    setHighRiskCount(hCount || 0)
+    setPendingCount(pCount || 0)
+    setStaffCount(stCount || 0)
+
+    if (learners) {
+      const seizureCounts = {}
+      learners.forEach(l => {
+        if (l.seizure_type) seizureCounts[l.seizure_type] = (seizureCounts[l.seizure_type] || 0) + 1
+      })
+      setSeizureData(Object.entries(seizureCounts).map(([name, count]) => ({ name, count })))
+
+      const triggerCounts = {}
+      learners.forEach(l => {
+        if (l.triggers) triggerCounts[l.triggers] = (triggerCounts[l.triggers] || 0) + 1
+      })
+      setTriggerData(Object.entries(triggerCounts).map(([name, count]) => ({ name, count })))
     }
-    fetchStats()
-  }, [])
+  }
+
+  async function resetScreenerCounter() {
+    if (!confirm('This will permanently delete all screener responses and reset the counter to 0. Continue?')) return
+    setResetting(true)
+    const { data: rows } = await supabase.from('screener_responses').select('id')
+    if (rows && rows.length > 0) {
+      const ids = rows.map(r => r.id)
+      await supabase.from('screener_responses').delete().in('id', ids)
+    }
+    await fetchStats()
+    setResetting(false)
+    alert('✅ Screener counter has been reset.')
+  }
+
+  async function deleteAllLearners() {
+    if (!confirm('This will permanently delete ALL learner registry entries. This cannot be undone. Continue?')) return
+    const { data: rows } = await supabase.from('learners').select('id')
+    if (rows && rows.length > 0) {
+      const ids = rows.map(r => r.id)
+      await supabase.from('learners').delete().in('id', ids)
+    }
+    await fetchStats()
+    alert('✅ Learner registry cleared.')
+  }
+
+  async function deleteAllStaff() {
+    if (!confirm('This will permanently delete ALL staff registry entries. This cannot be undone. Continue?')) return
+    const { data: rows } = await supabase.from('staff_registry').select('id')
+    if (rows && rows.length > 0) {
+      const ids = rows.map(r => r.id)
+      await supabase.from('staff_registry').delete().in('id', ids)
+    }
+    await fetchStats()
+    alert('✅ Staff registry cleared.')
+  }
 
   const colors = ['#3ECF8E','#185FA5','#BA7517','#A32D2D','#3B6D11','#993556']
 
@@ -85,10 +126,15 @@ function Dashboard() {
       <h1>🧠 EpiSafe School</h1>
       <p style={{ marginBottom: '24px' }}>Epilepsy management dashboard</p>
 
-      <div className="stats-grid">
+      {/* Stats */}
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <div className="stat-card">
           <div className="stat-number">{learnerCount}</div>
-          <div className="stat-label">Confirmed in Registry</div>
+          <div className="stat-label">Learners in Registry</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-number">{staffCount}</div>
+          <div className="stat-label">Staff in Registry</div>
         </div>
         <div className="stat-card">
           <div className="stat-number">{screeningCount}</div>
@@ -100,6 +146,7 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Pending Alert */}
       {pendingCount > 0 && (
         <div className="card" style={{ background: '#fffbe6', border: '1px solid #ffe58f', marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -116,21 +163,45 @@ function Dashboard() {
         </div>
       )}
 
+      {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
         <BarChart data={seizureData} title="📊 Seizure Types" emptyMsg="No confirmed learner data yet" />
         <BarChart data={triggerData} title="⚡ Common Triggers" emptyMsg="No trigger data yet" />
       </div>
 
+      {/* Quick Actions */}
       <div className="card">
         <h2>Quick Actions</h2>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={() => navigate('/app/screener')}>📋 New Screening</button>
           <button className="btn btn-primary" onClick={() => navigate('/app/registry')}>➕ Add Learner</button>
           <button className="btn btn-secondary" onClick={() => navigate('/app/guides')}>📖 View Guides</button>
-          {pendingCount > 0 && <button className="btn" style={{ background: '#ffe58f', color: '#854F0B' }} onClick={() => navigate('/app/pending')}>⏳ Pending ({pendingCount})</button>}
+          {pendingCount > 0 && (
+            <button className="btn" style={{ background: '#ffe58f', color: '#854F0B' }} onClick={() => navigate('/app/pending')}>
+              ⏳ Pending ({pendingCount})
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Manager Controls */}
+      <div className="card" style={{ border: '1px solid #ffccc7' }}>
+        <h2 style={{ color: '#A32D2D', marginBottom: '4px' }}>⚙️ Manager Controls</h2>
+        <p style={{ fontSize: '0.8125rem', color: '#888', marginBottom: '16px' }}>Danger zone — these actions are permanent and cannot be undone.</p>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button className="btn btn-danger" style={{ background: '#fa8c16' }} onClick={resetScreenerCounter} disabled={resetting}>
+            {resetting ? 'Resetting...' : '🔄 Reset Screener Counter'}
+          </button>
+          <button className="btn btn-danger" onClick={deleteAllLearners}>
+            🗑️ Delete All Learner Records
+          </button>
+          <button className="btn btn-danger" onClick={deleteAllStaff}>
+            🗑️ Delete All Staff Records
+          </button>
+        </div>
+      </div>
+
+      {/* Video */}
       <div className="card">
         <h2>🎥 Epilepsy & Seizure First Aid</h2>
         <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '12px' }}>
