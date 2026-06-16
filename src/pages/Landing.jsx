@@ -5,19 +5,19 @@ function Landing() {
 
   return (
     <div style={{
-  minHeight: '100vh',
-  width: '100%',
-  background: 'radial-gradient(ellipse at 20% 50%, #0f3460 0%, #0a0a1a 50%, #1a0a2e 100%)',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'flex-start',
-  padding: '80px 20px 60px 20px',
-  textAlign: 'center',
-  position: 'relative',
-  overflow: 'visible',
-  boxSizing: 'border-box',
-}}>
+      minHeight: '100vh',
+      width: '100%',
+      background: 'radial-gradient(ellipse at 20% 50%, #0f3460 0%, #0a0a1a 50%, #1a0a2e 100%)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      padding: '80px 20px 60px 20px',
+      textAlign: 'center',
+      position: 'relative',
+      overflow: 'visible',
+      boxSizing: 'border-box',
+    }}>
 
       {/* Decorative circles */}
       <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(62,207,142,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -41,6 +41,7 @@ function Landing() {
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '900px' }}>
 
+        {/* Title */}
         <div style={{ fontSize: '4.5rem', marginBottom: '16px', filter: 'drop-shadow(0 0 20px rgba(62,207,142,0.8))' }}>🧠</div>
         <h1 style={{ color: 'white', fontSize: '3rem', fontWeight: '700', marginBottom: '8px', textShadow: '0 0 40px rgba(62,207,142,0.4)' }}>EpiSafe School</h1>
         <div style={{ width: '80px', height: '3px', background: 'linear-gradient(90deg, #3ECF8E, transparent)', borderRadius: '2px', margin: '0 auto 12px' }} />
@@ -67,8 +68,14 @@ function Landing() {
           ))}
         </div>
 
-        {/* Badge pills */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '40px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        {/* Get started button */}
+        <button onClick={() => navigate('/login')} style={{ background: 'linear-gradient(135deg, #3ECF8E, #2db87a)', color: 'white', border: 'none', borderRadius: '14px', padding: '16px 52px', fontSize: '1.125rem', fontWeight: '600', cursor: 'pointer', boxShadow: '0 0 30px rgba(62,207,142,0.4)', marginBottom: '12px' }}>
+          Get Started →
+        </button>
+        <p style={{ color: '#567', fontSize: '0.8125rem', marginBottom: '40px' }}>Login or create an account to continue</p>
+
+        {/* Badge pills — bottom row, non-clickable info tags */}
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {[
             '🇲🇺 Designed for Mauritius',
             '🔒 Secure & confidential',
@@ -77,26 +84,6 @@ function Landing() {
           ].map((b, i) => (
             <div key={i} style={{ background: 'rgba(62,207,142,0.1)', border: '1px solid rgba(62,207,142,0.4)', borderRadius: '20px', padding: '8px 18px', color: '#3ECF8E', fontSize: '0.8125rem' }}>
               {b}
-            </div>
-          ))}
-        </div>
-
-        {/* Get started button */}
-        <button onClick={() => navigate('/login')} style={{ background: 'linear-gradient(135deg, #3ECF8E, #2db87a)', color: 'white', border: 'none', borderRadius: '14px', padding: '16px 52px', fontSize: '1.125rem', fontWeight: '600', cursor: 'pointer', boxShadow: '0 0 30px rgba(62,207,142,0.4)', marginBottom: '12px' }}>
-          Get Started →
-        </button>
-        <p style={{ color: '#567', fontSize: '0.8125rem', marginBottom: '60px' }}>Login or create an account to continue</p>
-
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', maxWidth: '500px', margin: '0 auto' }}>
-          {[
-            { num: '176+', label: 'Secondary schools in Mauritius' },
-            { num: '1 in 100', label: 'People live with epilepsy' },
-            { num: '4 Zones', label: 'Covered across Mauritius' },
-          ].map((s, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{ color: '#3ECF8E', fontSize: '1.625rem', fontWeight: '700' }}>{s.num}</div>
-              <div style={{ color: '#567', fontSize: '0.75rem', marginTop: '4px' }}>{s.label}</div>
             </div>
           ))}
         </div>
