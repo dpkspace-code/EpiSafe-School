@@ -12,6 +12,7 @@ function Dashboard() {
   const [seizureData, setSeizureData] = useState([])
   const [triggerData, setTriggerData] = useState([])
   const [resetting, setResetting] = useState(false)
+  const [clearingCache, setClearingCache] = useState(false)
 
   useEffect(() => { fetchStats() }, [])
 
@@ -93,6 +94,78 @@ function Dashboard() {
     }
     await fetchStats()
     alert('✅ Staff registry cleared.')
+  }
+
+  async function clearDeletedAccountsCache() {
+    if (!confirm('This will remove all registry records linked to deleted user accounts. Continue?')) return
+    setClearingCache(true)
+    let totalRemoved = 0
+
+    try {
+      // Clear learners with no matching auth user (user_id is null or orphaned)
+      const { data: learnerRows } = await supabase
+        .from('learners')
+        .select('id, user_id')
+        .not('user_id', 'is', null)
+
+      if (learnerRows && learnerRows.length > 0) {
+        // Check each user_id against auth — orphaned ones will fail profile lookup
+        // We delete records where status is 'deleted' as a proxy for removed accounts
+        const { data: deletedLearners } = await supabase
+          .from('learners')
+          .select('id')
+          .eq('status', 'deleted')
+
+        if (deletedLearners && deletedLearners.length > 0) {
+          const ids = deletedLearners.map(r => r.id)
+          await supabase.from('learners').delete().in('id', ids)
+          totalRemoved += ids.length
+        }
+      }
+
+      // Clear staff with deleted status
+      const { data: deletedStaff } = await supabase
+        .from('staff_registry')
+        .select('id')
+        .eq('status', 'deleted')
+
+      if (deletedStaff && deletedStaff.length > 0) {
+        const ids = deletedStaff.map(r => r.id)
+        await supabase.from('staff_registry').delete().in('id', ids)
+        totalRemoved += ids.length
+      }
+
+      // Also clear screener responses with no matching learner name
+      const { data: orphanedScreeners } = await supabase
+        .from('screener_responses')
+        .select('id, user_id')
+        .not('user_id', 'is', null)
+
+      if (orphanedScreeners && orphanedScreeners.length > 0) {
+        // Get all active learner user_ids
+        const { data: activeLearners } = await supabase
+          .from('learners')
+          .select('user_id')
+          .eq('status', 'active')
+
+        const activeIds = new Set((activeLearners || []).map(l => l.user_id))
+        const orphanIds = orphanedScreeners
+          .filter(s => !activeIds.has(s.user_id))
+          .map(s => s.id)
+
+        if (orphanIds.length > 0) {
+          await supabase.from('screener_responses').delete().in('id', orphanIds)
+          totalRemoved += orphanIds.length
+        }
+      }
+
+      await fetchStats()
+      alert(`✅ Cache cleared. ${totalRemoved} orphaned record${totalRemoved !== 1 ? 's' : ''} removed.`)
+    } catch (err) {
+      alert('⚠️ Error clearing cache. Please try again.')
+    }
+
+    setClearingCache(false)
   }
 
   const colors = ['#3ECF8E','#185FA5','#BA7517','#A32D2D','#3B6D11','#993556']
@@ -200,6 +273,9 @@ function Dashboard() {
           </button>
           <button className="btn btn-danger" onClick={deleteAllStaff}>
             🗑️ Delete All Staff Records
+          </button>
+          <button className="btn btn-danger" style={{ background: '#722ed1' }} onClick={clearDeletedAccountsCache} disabled={clearingCache}>
+            {clearingCache ? 'Clearing...' : '🧹 Clear Deleted Accounts Cache'}
           </button>
         </div>
       </div>
