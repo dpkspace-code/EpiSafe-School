@@ -57,7 +57,7 @@ const totalMaxScore = sections.reduce((total, section) =>
 
 const grades = ['Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12','Grade 13']
 
-function Screener() {
+function Screener({ schoolId }) {
   const [name, setName] = useState('')
   const [grade, setGrade] = useState('')
   const [parentName, setParentName] = useState('')
@@ -82,9 +82,7 @@ function Screener() {
     return { level: 'Low', score, pct: Math.round(pct) }
   }
 
-  const answeredInSection = (section) =>
-    section.questions.every(q => answers[q.id] !== undefined)
-
+  const answeredInSection = (section) => section.questions.every(q => answers[q.id] !== undefined)
   const allAnswered = sections.every(s => answeredInSection(s))
 
   async function handleSubmit() {
@@ -98,6 +96,7 @@ function Screener() {
       answers: JSON.stringify(answers),
       risk_score: r.score,
       risk_level: r.level,
+      school_id: schoolId,
     }])
     setResult(r)
     setSubmitted(true)
@@ -112,6 +111,7 @@ function Screener() {
       emergency_contact_phone: parentPhone,
       status: 'pending',
       action_plan: result.level,
+      school_id: schoolId,
     }])
     if (error) alert('Error: ' + error.message)
     else setAddedToRegistry(true)
@@ -119,13 +119,13 @@ function Screener() {
 
   function sendWhatsApp() {
     const phone = parentPhone?.replace(/\s/g, '')
-    const message = `Dear ${parentName || 'Parent/Guardian'},\n\nFollowing a health screening conducted at school, ${name} (${grade}) has been identified as requiring a medical review regarding possible seizure risk.\n\nWe kindly request that you arrange a consultation with your doctor as soon as possible and inform the school health team of the outcome.\n\nPlease contact us for further information.\n\nEpiSafe School Health Team`
+    const message = `Dear ${parentName || 'Parent/Guardian'},\n\nFollowing a health screening conducted at school, ${name} (${grade}) has been identified as requiring a medical review regarding possible seizure risk.\n\nWe kindly request that you arrange a consultation with your doctor as soon as possible.\n\nEpiSafe School Health Team`
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
   }
 
   function sendEmail() {
     const subject = `Health Screening Follow-up — ${name}`
-    const body = `Dear ${parentName || 'Parent/Guardian'},\n\nFollowing a health screening conducted at school, ${name} (${grade}) has been identified as requiring a medical review regarding possible seizure risk.\n\nWe kindly request that you arrange a consultation with your doctor as soon as possible and inform the school health team of the outcome.\n\nPlease contact us for further information.\n\nEpiSafe School Health Team`
+    const body = `Dear ${parentName || 'Parent/Guardian'},\n\nFollowing a health screening conducted at school, ${name} (${grade}) has been identified as requiring a medical review regarding possible seizure risk.\n\nWe kindly request that you arrange a consultation with your doctor as soon as possible.\n\nEpiSafe School Health Team`
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
   }
 
@@ -156,20 +156,13 @@ function Screener() {
           <div style={{ background: '#f0f4f8', borderRadius: '8px', height: '12px', margin: '0 auto 20px', maxWidth: '400px', overflow: 'hidden' }}>
             <div style={{ width: `${result.pct}%`, height: '100%', background: riskColors[result.level], borderRadius: '8px' }} />
           </div>
-          <p style={{ margin: '0 auto 24px', maxWidth: '500px', lineHeight: '1.7', color: '#444' }}>
-            {riskMessages[result.level]}
-          </p>
+          <p style={{ margin: '0 auto 24px', maxWidth: '500px', lineHeight: '1.7', color: '#444' }}>{riskMessages[result.level]}</p>
           <p style={{ color: '#666', marginBottom: '8px' }}><strong>{name}</strong> — {grade}</p>
         </div>
 
-        {/* Follow up section for high/moderate risk */}
         {isHighRisk && (
           <div className="card" style={{ border: `1px solid ${riskColors[result.level]}44`, background: result.level === 'High' ? '#fff1f0' : '#fff7e6' }}>
-            <h2 style={{ color: riskColors[result.level], marginBottom: '16px' }}>
-              🚨 Follow-up Actions Required
-            </h2>
-
-            {/* Parent contact fields */}
+            <h2 style={{ color: riskColors[result.level], marginBottom: '16px' }}>🚨 Follow-up Actions Required</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px', marginBottom: '16px' }}>
               <div className="form-group">
                 <label>Parent/Guardian Name</label>
@@ -180,46 +173,15 @@ function Screener() {
                 <input value={parentPhone} onChange={e => setParentPhone(e.target.value)} placeholder="e.g. 5XXXXXXX" />
               </div>
             </div>
-
-            <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
-              Choose how to notify the parent/guardian and whether to add this learner to the registry for monitoring:
-            </p>
-
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              {/* Add to registry */}
               {!addedToRegistry ? (
-                <button className="btn btn-primary" onClick={addToRegistry}>
-                  👥 Add to Registry
-                </button>
+                <button className="btn btn-primary" onClick={addToRegistry}>👥 Add to Registry</button>
               ) : (
-                <button className="btn" style={{ background: '#e6fff5', color: '#0F6E56', border: '1px solid #3ECF8E' }} disabled>
-                  ✅ Added to Registry
-                </button>
+                <button className="btn" style={{ background: '#e6fff5', color: '#0F6E56', border: '1px solid #3ECF8E' }} disabled>✅ Added to Registry</button>
               )}
-
-              {/* WhatsApp */}
-              <button
-                className="btn"
-                style={{ background: '#25D366', color: 'white' }}
-                onClick={sendWhatsApp}
-                disabled={!parentPhone}>
-                💬 Notify via WhatsApp
-              </button>
-
-              {/* Email */}
-              <button
-                className="btn"
-                style={{ background: '#4096ff', color: 'white' }}
-                onClick={sendEmail}>
-                📧 Notify via Email
-              </button>
+              <button className="btn" style={{ background: '#25D366', color: 'white' }} onClick={sendWhatsApp} disabled={!parentPhone}>💬 Notify via WhatsApp</button>
+              <button className="btn" style={{ background: '#4096ff', color: 'white' }} onClick={sendEmail}>📧 Notify via Email</button>
             </div>
-
-            {!parentPhone && (
-              <p style={{ fontSize: '12px', color: '#fa8c16', marginTop: '8px' }}>
-                ⚠️ Enter parent phone number to enable WhatsApp notification
-              </p>
-            )}
           </div>
         )}
 
@@ -255,7 +217,6 @@ function Screener() {
         </div>
       </div>
 
-      {/* Progress bar */}
       <div style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#888', marginBottom: '6px' }}>
           <span>Section {currentSection + 1} of {sections.length}</span>
@@ -266,7 +227,6 @@ function Screener() {
         </div>
       </div>
 
-      {/* Section tabs */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
         {sections.map((s, i) => (
           <button key={i} onClick={() => setCurrentSection(i)} style={{
@@ -280,43 +240,25 @@ function Screener() {
         ))}
       </div>
 
-      {/* Current section */}
       <div className="card">
         <h2 style={{ marginBottom: '20px' }}>{section.title}</h2>
         {section.questions.map((q, qi) => (
           <div key={q.id} style={{ marginBottom: '20px', padding: '16px', background: answers[q.id] !== undefined ? '#f9fffe' : '#f9f9f9', borderRadius: '8px', border: answers[q.id] !== undefined ? '1px solid #3ECF8E' : '1px solid #eee' }}>
-            <p style={{ color: '#333', marginBottom: '10px', fontWeight: '500' }}>
-              {qi + 1}. {q.text}
-            </p>
-            <select
-              value={answers[q.id]?.index ?? ''}
-              onChange={e => {
-                const idx = parseInt(e.target.value)
-                setAnswer(q.id, idx, q.weights[idx])
-              }}
-              style={{ marginBottom: 0 }}>
+            <p style={{ color: '#333', marginBottom: '10px', fontWeight: '500' }}>{qi + 1}. {q.text}</p>
+            <select value={answers[q.id]?.index ?? ''} onChange={e => { const idx = parseInt(e.target.value); setAnswer(q.id, idx, q.weights[idx]) }} style={{ marginBottom: 0 }}>
               <option value="">-- Select an answer --</option>
-              {q.options.map((opt, oi) => (
-                <option key={oi} value={oi}>{opt}</option>
-              ))}
+              {q.options.map((opt, oi) => <option key={oi} value={oi}>{opt}</option>)}
             </select>
           </div>
         ))}
       </div>
 
-      {/* Navigation */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
-        <button className="btn btn-secondary" onClick={() => setCurrentSection(prev => prev - 1)} disabled={currentSection === 0}>
-          ← Previous
-        </button>
+        <button className="btn btn-secondary" onClick={() => setCurrentSection(prev => prev - 1)} disabled={currentSection === 0}>← Previous</button>
         {currentSection < sections.length - 1 ? (
-          <button className="btn btn-primary" onClick={() => setCurrentSection(prev => prev + 1)} disabled={!answeredInSection(section)}>
-            Next →
-          </button>
+          <button className="btn btn-primary" onClick={() => setCurrentSection(prev => prev + 1)} disabled={!answeredInSection(section)}>Next →</button>
         ) : (
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving || !allAnswered}>
-            {saving ? 'Saving...' : '✅ Submit Screening'}
-          </button>
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving || !allAnswered}>{saving ? 'Saving...' : '✅ Submit Screening'}</button>
         )}
       </div>
     </div>
