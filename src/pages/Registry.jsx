@@ -57,6 +57,42 @@ const schoolsByZone = {
   'Zone 4': ['Bambous SSS','Cascades SSS','Ecole du Centre SSS','Floreal SSS','Forest Side SSS','Quatre Bornes SSS','Royal College Rose Hill','Vacoas SSS','Highlands College','Belle Rose SSS','Tamarin SSS','Black River SSS','Flic en Flac SSS','Petite Riviere SSS','Dr Regis Chaperon SSS','Loreto College Quatre Bornes','St Andrews College','Clavis College','Savannah College'],
 }
 
+function FlagModal({ learner, onClose, onSave }) {
+  const [note, setNote] = useState(learner.referral_note || '')
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    setSaving(true)
+    await supabase.from('learners').update({
+      referral_flagged: true,
+      referral_note: note,
+      referral_date: new Date().toISOString(),
+    }).eq('id', learner.id)
+    setSaving(false)
+    onSave()
+    onClose()
+  }
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div style={{ background: 'white', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        <h3 style={{ color: '#A32D2D', marginBottom: '8px' }}>⚕️ Flag for Medical Referral</h3>
+        <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '16px' }}><strong>{learner.full_name}</strong> will be flagged and a referral letter can be printed.</p>
+        <div className="form-group">
+          <label>Reason for Referral</label>
+          <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Frequent seizure episodes reported, medication review recommended..." rows={4} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.875rem', resize: 'vertical' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+          <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose}>Cancel</button>
+          <button className="btn btn-danger" style={{ flex: 2 }} onClick={save} disabled={saving}>
+            {saving ? 'Saving...' : '⚕️ Flag for Referral'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Registry() {
   const [learners, setLearners] = useState([])
   const [showForm, setShowForm] = useState(false)
@@ -65,6 +101,7 @@ function Registry() {
   const [selectedZone, setSelectedZone] = useState('')
   const [selectedActions, setSelectedActions] = useState([...actionSteps])
   const [selectedIds, setSelectedIds] = useState([])
+  const [flagTarget, setFlagTarget] = useState(null)
   const [form, setForm] = useState({
     full_name: '', grade: '', class: '', seizure_type: '',
     medication: '', triggers: '', emergency_contact_name: '',
@@ -174,11 +211,12 @@ function Registry() {
 
   const vulnColors = { High: '#ff4d4f', Moderate: '#fa8c16', 'Low-Moderate': '#fadb14', Low: '#3ECF8E' }
   const vulnScores = { High: 9, Moderate: 6, 'Low-Moderate': 4, Low: 2 }
-
   const allSelected = filteredLearners.length > 0 && selectedIds.length === filteredLearners.length
 
   return (
     <div>
+      {flagTarget && <FlagModal learner={flagTarget} onClose={() => setFlagTarget(null)} onSave={fetchLearners} />}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1>👥 Learner Registry</h1>
@@ -245,11 +283,7 @@ function Registry() {
               <option value="">-- Select seizure type --</option>
               {seizureTypes.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-            {selectedSeizure && (
-              <div style={{ background: '#e6fff5', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#0F6E56', marginTop: '-8px', marginBottom: '12px' }}>
-                ℹ️ {selectedSeizure.desc}
-              </div>
-            )}
+            {selectedSeizure && <div style={{ background: '#e6fff5', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#0F6E56', marginTop: '-8px', marginBottom: '12px' }}>ℹ️ {selectedSeizure.desc}</div>}
           </div>
 
           <div className="form-group">
@@ -258,11 +292,7 @@ function Registry() {
               <option value="">-- Select medication --</option>
               {medications.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
             </select>
-            {selectedMed && (
-              <div style={{ background: '#e6f1fb', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#185FA5', marginTop: '-8px', marginBottom: '12px' }}>
-                ℹ️ {selectedMed.desc}
-              </div>
-            )}
+            {selectedMed && <div style={{ background: '#e6f1fb', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#185FA5', marginTop: '-8px', marginBottom: '12px' }}>ℹ️ {selectedMed.desc}</div>}
           </div>
 
           <div className="form-group">
@@ -271,11 +301,7 @@ function Registry() {
               <option value="">-- Select main trigger --</option>
               {triggers.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
-            {selectedTrigger && (
-              <div style={{ background: '#fffbe6', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#854F0B', marginTop: '-8px', marginBottom: '12px' }}>
-                ℹ️ {selectedTrigger.desc}
-              </div>
-            )}
+            {selectedTrigger && <div style={{ background: '#fffbe6', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', color: '#854F0B', marginTop: '-8px', marginBottom: '12px' }}>ℹ️ {selectedTrigger.desc}</div>}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
@@ -325,44 +351,55 @@ function Registry() {
             {search ? 'No learners found matching your search.' : 'No learners in registry yet.'}
           </p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th style={{ width: '36px' }}>
-                  <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ width: 'auto', margin: 0 }} />
-                </th>
-                <th>Name</th><th>Grade</th><th>Seizure Type</th><th>Vulnerability</th><th>Emergency Contact</th><th>Status</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredLearners.map(l => {
-                const vulnLevel = l.action_plan && vulnColors[l.action_plan] ? l.action_plan : null
-                return (
-                  <tr key={l.id}>
-                    <td>
-                      <input type="checkbox" checked={selectedIds.includes(l.id)} onChange={() => toggleSelect(l.id)} style={{ width: 'auto', margin: 0 }} />
-                    </td>
-                    <td><strong>{l.full_name}</strong></td>
-                    <td>{l.grade}</td>
-                    <td>{l.seizure_type || '—'}</td>
-                    <td>
-                      {vulnLevel ? (
-                        <span style={{ background: vulnColors[vulnLevel] + '22', color: vulnColors[vulnLevel], border: `1px solid ${vulnColors[vulnLevel]}44`, borderRadius: '20px', padding: '2px 10px', fontSize: '12px', fontWeight: '600' }}>
-                          {vulnLevel} ({vulnScores[vulnLevel]}/10)
-                        </span>
-                      ) : '—'}
-                    </td>
-                    <td>{l.emergency_contact_name}<br /><small style={{ color: '#888' }}>{l.emergency_contact_phone}</small></td>
-                    <td><span className={badgeClass(l.status)}>{l.status}</span></td>
-                    <td style={{ display: 'flex', gap: '6px' }}>
-                      <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => printLearner(l)}>🖨️ Print</button>
-                      <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => deleteLearner(l.id)}>Remove</button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ minWidth: '800px' }}>
+              <thead>
+                <tr>
+                  <th style={{ width: '36px' }}>
+                    <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ width: 'auto', margin: 0 }} />
+                  </th>
+                  <th>Name</th><th>Grade</th><th>Seizure Type</th><th>Vulnerability</th><th>Emergency Contact</th><th>Status</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLearners.map(l => {
+                  const vulnLevel = l.action_plan && vulnColors[l.action_plan] ? l.action_plan : null
+                  return (
+                    <tr key={l.id}>
+                      <td>
+                        <input type="checkbox" checked={selectedIds.includes(l.id)} onChange={() => toggleSelect(l.id)} style={{ width: 'auto', margin: 0 }} />
+                      </td>
+                      <td>
+                        <strong>{l.full_name}</strong>
+                        {l.referral_flagged && <span style={{ marginLeft: '6px', fontSize: '0.7rem', background: '#fff1f0', color: '#A32D2D', border: '1px solid #ffccc7', borderRadius: '10px', padding: '1px 6px' }}>⚕️ Referred</span>}
+                      </td>
+                      <td>{l.grade}</td>
+                      <td>{l.seizure_type || '—'}</td>
+                      <td>
+                        {vulnLevel ? (
+                          <span style={{ background: vulnColors[vulnLevel] + '22', color: vulnColors[vulnLevel], border: `1px solid ${vulnColors[vulnLevel]}44`, borderRadius: '20px', padding: '2px 10px', fontSize: '12px', fontWeight: '600' }}>
+                            {vulnLevel} ({vulnScores[vulnLevel]}/10)
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td>{l.emergency_contact_name}<br /><small style={{ color: '#888' }}>{l.emergency_contact_phone}</small></td>
+                      <td><span className={badgeClass(l.status)}>{l.status}</span></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                          <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => printLearner(l)}>🖨️</button>
+                          <button
+                            style={{ padding: '4px 8px', fontSize: '11px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: l.referral_flagged ? '#fff1f0' : '#f0f4f8', color: l.referral_flagged ? '#A32D2D' : '#666' }}
+                            onClick={() => setFlagTarget(l)}
+                          >⚕️</button>
+                          <button className="btn btn-danger" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => deleteLearner(l.id)}>✕</button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

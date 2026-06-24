@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import ReportGenerator from './ReportGenerator'
+import MedicalReferral from './MedicalReferral'
 
 function Dashboard() {
   const navigate = useNavigate()
@@ -15,6 +16,7 @@ function Dashboard() {
   const [resetting, setResetting] = useState(false)
   const [clearingCache, setClearingCache] = useState(false)
   const [showReport, setShowReport] = useState(false)
+  const [showReferral, setShowReferral] = useState(false)
 
   useEffect(() => { fetchStats() }, [])
 
@@ -141,6 +143,7 @@ function Dashboard() {
   return (
     <div>
       {showReport && <ReportGenerator onClose={() => setShowReport(false)} />}
+      {showReferral && <MedicalReferral onClose={() => setShowReferral(false)} />}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
         <img src="/episafe_icon_512.png" alt="EpiSafe School" style={{ width: '44px', height: '44px', borderRadius: '10px', objectFit: 'cover' }} />
@@ -199,6 +202,9 @@ function Dashboard() {
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button className="btn" style={{ background: '#5B21B6', color: 'white' }} onClick={() => setShowReport(true)}>
             📄 Generate Authority Report
+          </button>
+          <button className="btn" style={{ background: '#A32D2D', color: 'white' }} onClick={() => setShowReferral(true)}>
+            ⚕️ Medical Referrals
           </button>
           <button className="btn btn-danger" style={{ background: '#fa8c16' }} onClick={resetScreenerCounter} disabled={resetting}>
             {resetting ? 'Resetting...' : '🔄 Reset Screener Counter'}

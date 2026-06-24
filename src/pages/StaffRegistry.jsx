@@ -1,10 +1,47 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 
+function FlagModal({ staff, onClose, onSave }) {
+  const [note, setNote] = useState(staff.referral_note || '')
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    setSaving(true)
+    await supabase.from('staff_registry').update({
+      referral_flagged: true,
+      referral_note: note,
+      referral_date: new Date().toISOString(),
+    }).eq('id', staff.id)
+    setSaving(false)
+    onSave()
+    onClose()
+  }
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div style={{ background: 'white', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        <h3 style={{ color: '#A32D2D', marginBottom: '8px' }}>⚕️ Flag for Medical Referral</h3>
+        <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '16px' }}><strong>{staff.full_name}</strong> will be flagged and a referral letter can be printed.</p>
+        <div className="form-group">
+          <label>Reason for Referral</label>
+          <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Frequent seizure episodes reported, medication review recommended..." rows={4} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.875rem', resize: 'vertical' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+          <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose}>Cancel</button>
+          <button className="btn btn-danger" style={{ flex: 2 }} onClick={save} disabled={saving}>
+            {saving ? 'Saving...' : '⚕️ Flag for Referral'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function StaffRegistry() {
   const [staff, setStaff] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [flagTarget, setFlagTarget] = useState(null)
 
   useEffect(() => { fetchStaff() }, [])
 
@@ -66,6 +103,8 @@ function StaffRegistry() {
 
   return (
     <div>
+      {flagTarget && <FlagModal staff={flagTarget} onClose={() => setFlagTarget(null)} onSave={fetchStaff} />}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1>👥 Staff Registry</h1>
@@ -80,38 +119,49 @@ function StaffRegistry() {
             {search ? 'No staff found matching your search.' : 'No staff in registry yet.'}
           </p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th><th>Staff Type</th><th>Department</th><th>Vulnerability</th><th>Emergency Contact</th><th>Status</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredStaff.map(s => {
-                const vulnLevel = s.risk_level && vulnColors[s.risk_level] ? s.risk_level : null
-                return (
-                  <tr key={s.id}>
-                    <td><strong>{s.full_name}</strong></td>
-                    <td>{s.staff_type || '—'}</td>
-                    <td>{s.department || '—'}</td>
-                    <td>
-                      {vulnLevel ? (
-                        <span style={{ background: vulnColors[vulnLevel] + '22', color: vulnColors[vulnLevel], border: `1px solid ${vulnColors[vulnLevel]}44`, borderRadius: '20px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: '600' }}>
-                          {vulnLevel} ({vulnScores[vulnLevel]}/10)
-                        </span>
-                      ) : '—'}
-                    </td>
-                    <td>{s.emergency_contact_name || '—'}<br /><small style={{ color: '#888' }}>{s.emergency_contact_phone || '—'}</small></td>
-                    <td><span className={badgeClass(s.status)}>{s.status}</span></td>
-                    <td style={{ display: 'flex', gap: '6px' }}>
-                      <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }} onClick={() => printStaff(s)}>🖨️ Print</button>
-                      <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: '0.75rem' }} onClick={() => deleteStaff(s.id)}>Remove</button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ minWidth: '700px' }}>
+              <thead>
+                <tr>
+                  <th>Name</th><th>Staff Type</th><th>Department</th><th>Vulnerability</th><th>Emergency Contact</th><th>Status</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredStaff.map(s => {
+                  const vulnLevel = s.risk_level && vulnColors[s.risk_level] ? s.risk_level : null
+                  return (
+                    <tr key={s.id}>
+                      <td>
+                        <strong>{s.full_name}</strong>
+                        {s.referral_flagged && <span style={{ marginLeft: '6px', fontSize: '0.7rem', background: '#fff1f0', color: '#A32D2D', border: '1px solid #ffccc7', borderRadius: '10px', padding: '1px 6px' }}>⚕️ Referred</span>}
+                      </td>
+                      <td>{s.staff_type || '—'}</td>
+                      <td>{s.department || '—'}</td>
+                      <td>
+                        {vulnLevel ? (
+                          <span style={{ background: vulnColors[vulnLevel] + '22', color: vulnColors[vulnLevel], border: `1px solid ${vulnColors[vulnLevel]}44`, borderRadius: '20px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: '600' }}>
+                            {vulnLevel} ({vulnScores[vulnLevel]}/10)
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td>{s.emergency_contact_name || '—'}<br /><small style={{ color: '#888' }}>{s.emergency_contact_phone || '—'}</small></td>
+                      <td><span className={badgeClass(s.status)}>{s.status}</span></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                          <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => printStaff(s)}>🖨️</button>
+                          <button
+                            style={{ padding: '4px 8px', fontSize: '11px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: s.referral_flagged ? '#fff1f0' : '#f0f4f8', color: s.referral_flagged ? '#A32D2D' : '#666' }}
+                            onClick={() => setFlagTarget(s)}
+                          >⚕️</button>
+                          <button className="btn btn-danger" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => deleteStaff(s.id)}>✕</button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
