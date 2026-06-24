@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 
 const MANAGER_SECRET = 'EPISAFE2025'
+const ADMIN_SECRET = 'GodPleaseHelpEpilepsy@Patient'
 const staffTypes = ['Teacher', 'Support Staff', 'Attendants', 'Administrative Staff']
 
 const schoolsByZone = {
@@ -30,19 +31,15 @@ function Login({ onLogin }) {
   async function handleSubmit() {
     if (!email || !password) return setError('Please enter email and password')
     if (isSignUp && role === 'staff' && !staffType) return setError('Please select your staff type')
-    if (isSignUp && role === 'manager' && managerCode !== MANAGER_SECRET) {
-      return setError('Invalid manager code. Please contact your administrator.')
-    }
-    if (isSignUp && role === 'manager' && (!selectedZone || !school)) {
-      return setError('Please select your zone and school')
-    }
+    if (isSignUp && role === 'manager' && managerCode !== MANAGER_SECRET) return setError('Invalid manager code.')
+    if (isSignUp && role === 'admin' && managerCode !== ADMIN_SECRET) return setError('Invalid admin code.')
+    if (isSignUp && role === 'manager' && (!selectedZone || !school)) return setError('Please select your zone and school')
     setLoading(true)
     setError('')
 
     if (isSignUp) {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email, password,
         options: {
           data: {
             role,
@@ -52,11 +49,25 @@ function Login({ onLogin }) {
           }
         }
       })
-      if (error) setError(error.message)
-      else setError('Account created! You can now log in.')
+      if (signUpError) {
+        setError(signUpError.message)
+      } else if (role === 'manager' && data?.user) {
+        // Register the school
+        await supabase.from('schools').insert([{
+          manager_id: data.user.id,
+          school_name: school,
+          zone: selectedZone,
+          manager_email: email,
+        }])
+        setError('Account created! You can now log in.')
+      } else if (role === 'admin' && data?.user) {
+        setError('Admin account created! You can now log in.')
+      } else {
+        setError('Account created! You can now log in.')
+      }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInError) setError(signInError.message)
       else onLogin()
     }
     setLoading(false)
@@ -93,16 +104,17 @@ function Login({ onLogin }) {
         {isSignUp && (
           <div className="form-group">
             <label>I am a</label>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
-              <button onClick={() => selectRole('learner')} style={{ flex: 1, padding: '10px', border: role === 'learner' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: role === 'learner' ? '#e6fff5' : 'white', color: role === 'learner' ? '#0F6E56' : '#666', fontWeight: role === 'learner' ? '500' : '400' }}>
-                🎒 Learner
-              </button>
-              <button onClick={() => selectRole('staff')} style={{ flex: 1, padding: '10px', border: role === 'staff' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: role === 'staff' ? '#e6fff5' : 'white', color: role === 'staff' ? '#0F6E56' : '#666', fontWeight: role === 'staff' ? '500' : '400' }}>
-                🧑‍🏫 Staff
-              </button>
-              <button onClick={() => selectRole('manager')} style={{ flex: 1, padding: '10px', border: role === 'manager' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: role === 'manager' ? '#e6fff5' : 'white', color: role === 'manager' ? '#0F6E56' : '#666', fontWeight: role === 'manager' ? '500' : '400' }}>
-                🏫 Manager
-              </button>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              {[
+                { key: 'learner', icon: '🎒', label: 'Learner' },
+                { key: 'staff', icon: '🧑‍🏫', label: 'Staff' },
+                { key: 'manager', icon: '🏫', label: 'Manager' },
+                { key: 'admin', icon: '👑', label: 'Admin' },
+              ].map(r => (
+                <button key={r.key} onClick={() => selectRole(r.key)} style={{ flex: '1 1 40%', padding: '10px', border: role === r.key ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: role === r.key ? '#e6fff5' : 'white', color: role === r.key ? '#0F6E56' : '#666', fontWeight: role === r.key ? '500' : '400' }}>
+                  {r.icon} {r.label}
+                </button>
+              ))}
             </div>
 
             {role === 'staff' && (
@@ -119,8 +131,7 @@ function Login({ onLogin }) {
               <>
                 <div className="form-group">
                   <label>Manager Secret Code</label>
-                  <input type="password" value={managerCode} onChange={e => setManagerCode(e.target.value)} placeholder="Enter secret code provided by administrator" />
-                  <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '-8px' }}>Contact your school administrator for this code.</p>
+                  <input type="password" value={managerCode} onChange={e => setManagerCode(e.target.value)} placeholder="Enter secret code" />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
                   <div className="form-group">
@@ -142,6 +153,13 @@ function Login({ onLogin }) {
                   </div>
                 </div>
               </>
+            )}
+
+            {role === 'admin' && (
+              <div className="form-group">
+                <label>Admin Secret Code</label>
+                <input type="password" value={managerCode} onChange={e => setManagerCode(e.target.value)} placeholder="Enter admin secret code" />
+              </div>
             )}
           </div>
         )}

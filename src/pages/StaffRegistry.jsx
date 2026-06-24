@@ -37,7 +37,7 @@ function FlagModal({ staff, onClose, onSave }) {
   )
 }
 
-function StaffRegistry() {
+function StaffRegistry({ schoolId }) {
   const [staff, setStaff] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

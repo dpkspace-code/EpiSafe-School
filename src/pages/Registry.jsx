@@ -93,7 +93,7 @@ function FlagModal({ learner, onClose, onSave }) {
   )
 }
 
-function Registry() {
+function Registry({ schoolId }) {
   const [learners, setLearners] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -127,7 +127,7 @@ function Registry() {
   async function handleSubmit() {
     if (!form.full_name) return alert('Please enter learner name')
     const finalForm = { ...form, action_plan: selectedActions.join(' | ') }
-    const { error } = await supabase.from('learners').insert([finalForm])
+    const { error } = await supabase.from('learners').insert([{ ...finalForm, school_id: schoolId }])
     if (error) {
       alert('Error saving: ' + error.message)
     } else {
