@@ -21,7 +21,10 @@ function Pending({ schoolId }) {
   const [rejected, setRejected] = useState({})
   const [selected, setSelected] = useState(new Set())
 
-  useEffect(() => { if (schoolId) fetchPending() }, [schoolId])
+  useEffect(() => {
+    if (schoolId) fetchPending()
+    else setLoading(false)
+  }, [schoolId])
 
   async function fetchPending() {
     setLoading(true)
@@ -207,7 +210,13 @@ function Pending({ schoolId }) {
         </div>
       )}
 
-      {loading ? <p>Loading...</p> : pending.length === 0 ? (
+      {loading ? <p>Loading...</p> : !schoolId ? (
+        <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏫</div>
+          <h2>No school registered yet</h2>
+          <p style={{ color: '#888' }}>Your account is not linked to a school. Please contact the administrator.</p>
+        </div>
+      ) : pending.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
           <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✅</div>
           <h2>All caught up!</h2>
