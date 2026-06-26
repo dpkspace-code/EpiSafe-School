@@ -12,11 +12,20 @@ function AdminDashboard({ tab = 'dashboard' }) {
   async function fetchAll() {
     setLoading(true)
 
-    const { data: schoolData } = await supabase.from('schools').select('*').order('created_at', { ascending: false })
-    const { count: lCount } = await supabase.from('learners').select('*', { count: 'exact', head: true }).eq('status', 'active')
-    const { count: sCount } = await supabase.from('staff_registry').select('*', { count: 'exact', head: true }).eq('status', 'active')
-    const { count: scCount } = await supabase.from('screener_responses').select('*', { count: 'exact', head: true })
-    const { count: hCount } = await supabase.from('screener_responses').select('*', { count: 'exact', head: true }).eq('risk_level', 'High')
+    const { data: schoolData } = await supabase
+      .from('schools').select('*').order('created_at', { ascending: false })
+
+    const { count: lCount } = await supabase
+      .from('learners').select('*', { count: 'exact', head: true }).eq('status', 'active')
+
+    const { count: sCount } = await supabase
+      .from('staff_registry').select('*', { count: 'exact', head: true }).eq('status', 'active')
+
+    const { count: scCount } = await supabase
+      .from('screener_responses').select('*', { count: 'exact', head: true })
+
+    const { count: hCount } = await supabase
+      .from('screener_responses').select('*', { count: 'exact', head: true }).eq('risk_level', 'High')
 
     // For each school get learner and staff counts
     const enriched = await Promise.all((schoolData || []).map(async school => {
@@ -27,12 +36,18 @@ function AdminDashboard({ tab = 'dashboard' }) {
     }))
 
     setSchools(enriched)
-    setStats({ schools: schoolData?.length || 0, learners: lCount || 0, staff: sCount || 0, screenings: scCount || 0, highRisk: hCount || 0 })
+    setStats({
+      schools: schoolData?.length || 0,
+      learners: lCount || 0,
+      staff: sCount || 0,
+      screenings: scCount || 0,
+      highRisk: hCount || 0
+    })
     setLoading(false)
   }
 
-  async function deleteSchool(schoolId, managerEmail) {
-    if (!confirm(`This will remove ${managerEmail}'s school registration. Their data will remain but be unlinked. Continue?`)) return
+  async function deleteSchool(schoolId, schoolName) {
+    if (!confirm(`Remove ${schoolName}'s registration? Their data will remain but be unlinked. Continue?`)) return
     await supabase.from('schools').delete().eq('id', schoolId)
     fetchAll()
   }
@@ -66,31 +81,14 @@ function AdminDashboard({ tab = 'dashboard' }) {
 
       {activeTab === 'dashboard' && (
         <>
-          {/* Global Stats */}
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: '24px' }}>
-            <div className="stat-card">
-              <div className="stat-number" style={{ color: '#5B21B6' }}>{stats.schools}</div>
-              <div className="stat-label">Schools Registered</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">{stats.learners}</div>
-              <div className="stat-label">Total Learners</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">{stats.staff}</div>
-              <div className="stat-label">Total Staff</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">{stats.screenings}</div>
-              <div className="stat-label">Total Screenings</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number" style={{ color: '#ff4d4f' }}>{stats.highRisk}</div>
-              <div className="stat-label">High Risk Cases</div>
-            </div>
+            <div className="stat-card"><div className="stat-number" style={{ color: '#5B21B6' }}>{stats.schools}</div><div className="stat-label">Schools Registered</div></div>
+            <div className="stat-card"><div className="stat-number">{stats.learners}</div><div className="stat-label">Total Learners</div></div>
+            <div className="stat-card"><div className="stat-number">{stats.staff}</div><div className="stat-label">Total Staff</div></div>
+            <div className="stat-card"><div className="stat-number">{stats.screenings}</div><div className="stat-label">Total Screenings</div></div>
+            <div className="stat-card"><div className="stat-number" style={{ color: '#ff4d4f' }}>{stats.highRisk}</div><div className="stat-label">High Risk Cases</div></div>
           </div>
 
-          {/* Zone breakdown */}
           <div className="card">
             <h2 style={{ marginBottom: '16px' }}>🗺️ Schools by Zone</h2>
             {['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4'].map(zone => {
@@ -115,7 +113,7 @@ function AdminDashboard({ tab = 'dashboard' }) {
         <div className="card">
           <h2 style={{ marginBottom: '16px' }}>🏫 Registered Schools & Managers</h2>
           {loading ? <p>Loading...</p> : schools.length === 0 ? (
-            <p style={{ textAlign: 'center', padding: '40px', color: '#aaa' }}>No schools registered yet.</p>
+            <p style={{ textAlign: 'center', padding: '40px', color: '#aaa' }}>No schools registered yet. Schools appear here when managers sign up.</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ minWidth: '700px' }}>
@@ -135,30 +133,14 @@ function AdminDashboard({ tab = 'dashboard' }) {
                   {schools.map(s => (
                     <tr key={s.id}>
                       <td><strong>{s.school_name}</strong></td>
-                      <td>
-                        <span style={{ fontSize: '0.75rem', fontWeight: '600', color: zoneColor[s.zone] || '#888' }}>
-                          {s.zone || '—'}
-                        </span>
-                      </td>
+                      <td><span style={{ fontSize: '0.75rem', fontWeight: '600', color: zoneColor[s.zone] || '#888' }}>{s.zone || '—'}</span></td>
                       <td style={{ fontSize: '0.8125rem', color: '#555' }}>{s.manager_email || '—'}</td>
+                      <td><span style={{ fontWeight: '700', color: '#185FA5' }}>{s.learnerCount}</span></td>
+                      <td><span style={{ fontWeight: '700', color: '#3B6D11' }}>{s.staffCount}</span></td>
+                      <td>{s.pendingCount > 0 ? <span style={{ fontWeight: '700', color: '#fa8c16' }}>{s.pendingCount}</span> : <span style={{ color: '#aaa' }}>0</span>}</td>
+                      <td style={{ fontSize: '0.75rem', color: '#aaa' }}>{new Date(s.created_at).toLocaleDateString('en-GB')}</td>
                       <td>
-                        <span style={{ fontWeight: '700', color: '#185FA5' }}>{s.learnerCount}</span>
-                      </td>
-                      <td>
-                        <span style={{ fontWeight: '700', color: '#3B6D11' }}>{s.staffCount}</span>
-                      </td>
-                      <td>
-                        {s.pendingCount > 0 ? (
-                          <span style={{ fontWeight: '700', color: '#fa8c16' }}>{s.pendingCount}</span>
-                        ) : <span style={{ color: '#aaa' }}>0</span>}
-                      </td>
-                      <td style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                        {new Date(s.created_at).toLocaleDateString('en-GB')}
-                      </td>
-                      <td>
-                        <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => deleteSchool(s.id, s.manager_email)}>
-                          Remove
-                        </button>
+                        <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => deleteSchool(s.id, s.school_name)}>Remove</button>
                       </td>
                     </tr>
                   ))}

@@ -12,15 +12,9 @@ const seizureTypes = [
 ]
 
 const medications = [
-  'Sodium Valproate (Epilim)',
-  'Carbamazepine (Tegretol)',
-  'Lamotrigine (Lamictal)',
-  'Levetiracetam (Keppra)',
-  'Phenobarbitone',
-  'Clonazepam (Rivotril)',
-  'Multiple medications',
-  'No medication',
-  'Unknown',
+  'Sodium Valproate (Epilim)', 'Carbamazepine (Tegretol)', 'Lamotrigine (Lamictal)',
+  'Levetiracetam (Keppra)', 'Phenobarbitone', 'Clonazepam (Rivotril)',
+  'Multiple medications', 'No medication', 'Unknown',
 ]
 
 const staffTypes = ['Teacher', 'Support Staff', 'Attendants', 'Administrative Staff']
@@ -73,7 +67,7 @@ function calcRiskLevel(answers) {
 
 function StaffSelfRegister({ session, onLogout }) {
   const navigate = useNavigate()
-  const [step, setStep] = useState(1) // 1=personal, 2=medical, 3=screening, 4=emergency
+  const [step, setStep] = useState(1)
   const [selectedZone, setSelectedZone] = useState('')
   const [screenAnswers, setScreenAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
@@ -81,20 +75,13 @@ function StaffSelfRegister({ session, onLogout }) {
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     full_name: '', staff_type: session?.user?.user_metadata?.staff_type || '', department: '',
-    zone: '', school: '',
-    has_seizures: '', seizure_type: '', medication: '',
+    zone: '', school: '', has_seizures: '', seizure_type: '', medication: '',
     emergency_contact_name: '', emergency_contact_phone: '',
     emergency_contact_email: '', status: 'pending'
   })
 
-  function goHome() {
-    onLogout()
-    navigate('/')
-  }
-
-  function goToGuides() {
-    navigate('/guides')
-  }
+  function goHome() { onLogout(); navigate('/') }
+  function goToGuides() { navigate('/guides') }
 
   const selectedSeizure = seizureTypes.find(s => s.value === form.seizure_type)
   const schoolList = selectedZone ? schoolsByZone[selectedZone] : []
@@ -110,14 +97,29 @@ function StaffSelfRegister({ session, onLogout }) {
     if (!form.staff_type) return setError('Please select your staff type')
     setSaving(true)
     const { level, score } = calcRiskLevel(screenAnswers)
+
+    // Look up school_id from schools table by school name
+    let schoolId = null
+    if (form.school) {
+      const { data: schoolData } = await supabase
+        .from('schools')
+        .select('id')
+        .eq('school_name', form.school)
+        .single()
+      if (schoolData) schoolId = schoolData.id
+    }
+
     const finalForm = {
       ...form,
       zone: selectedZone,
       risk_level: level,
       risk_score: score,
       status: 'pending',
+      user_id: session.user.id,
+      school_id: schoolId,
     }
-    const { error: dbError } = await supabase.from('staff_registry').insert([{ ...finalForm, user_id: session.user.id }])
+
+    const { error: dbError } = await supabase.from('staff_registry').insert([finalForm])
     if (dbError) setError('Error: ' + dbError.message)
     else setSubmitted(true)
     setSaving(false)
@@ -135,20 +137,12 @@ function StaffSelfRegister({ session, onLogout }) {
         <div style={{ background: 'white', borderRadius: '16px', padding: '40px', maxWidth: '480px', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
           <div style={{ fontSize: '4rem', marginBottom: '16px' }}>✅</div>
           <h2 style={{ color: '#1a1a2e', marginBottom: '12px' }}>Registration Complete!</h2>
-          <p style={{ color: '#666', lineHeight: '1.7', marginBottom: '20px' }}>
-            Thank you for registering. Your information has been securely submitted to the school health team.
-          </p>
+          <p style={{ color: '#666', lineHeight: '1.7', marginBottom: '20px' }}>Thank you for registering. Your information has been securely submitted to the school health team.</p>
           <div style={{ background: '#f0f4f8', border: '1px solid #e0e6ed', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
             <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Epilepsy Vulnerability Level</p>
             <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>{emojis[level]}</div>
-            <p style={{ fontSize: '0.9375rem', color: colors[level], fontWeight: '700', marginBottom: level !== 'Low' ? '4px' : 0 }}>
-              {level} ({vulnScores[level]}/10)
-            </p>
-            {level !== 'Low' && (
-              <p style={{ fontSize: '0.8125rem', color: colors[level], fontWeight: '500' }}>
-                A member of the health team will follow up with you shortly.
-              </p>
-            )}
+            <p style={{ fontSize: '0.9375rem', color: colors[level], fontWeight: '700', marginBottom: level !== 'Low' ? '4px' : 0 }}>{level} ({vulnScores[level]}/10)</p>
+            {level !== 'Low' && <p style={{ fontSize: '0.8125rem', color: colors[level], fontWeight: '500' }}>A member of the health team will follow up with you shortly.</p>}
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button className="btn btn-secondary" style={{ flex: 1 }} onClick={goToGuides}>📖 Guides</button>
@@ -161,41 +155,27 @@ function StaffSelfRegister({ session, onLogout }) {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f0f4f8', padding: '20px' }}>
-      <button onClick={goHome} style={{ position: 'fixed', top: '16px', left: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-        🏠 Home
-      </button>
-
-      <button onClick={goToGuides} style={{ position: 'fixed', top: '16px', right: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-        📖 Guides
-      </button>
+      <button onClick={goHome} style={{ position: 'fixed', top: '16px', left: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>🏠 Home</button>
+      <button onClick={goToGuides} style={{ position: 'fixed', top: '16px', right: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8125rem', color: '#666', cursor: 'pointer', zIndex: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>📖 Guides</button>
 
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-
-        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <div style={{ fontSize: '2.25rem' }}>🧠</div>
+          <img src="/episafe_icon_512.png" alt="EpiSafe" style={{ width: '60px', height: '60px', borderRadius: '14px', objectFit: 'cover', marginBottom: '8px' }} />
           <h1 style={{ color: '#1a1a2e', fontSize: '1.25rem', marginBottom: '4px' }}>EpiSafe — Staff Registration</h1>
           <p style={{ color: '#888', fontSize: '0.8125rem' }}>Your information is confidential and secure</p>
         </div>
 
-        {/* Step indicator */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
           {steps.map((s, i) => (
             <div key={i} style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{
-                height: '4px', borderRadius: '2px', marginBottom: '6px',
-                background: i < step ? '#3ECF8E' : i === step - 1 ? '#3ECF8E' : '#e0e0e0'
-              }} />
-              <div style={{ fontSize: '0.5625rem', color: i === step - 1 ? '#3ECF8E' : '#aaa', fontWeight: i === step - 1 ? '700' : '400' }}>
-                {s}
-              </div>
+              <div style={{ height: '4px', borderRadius: '2px', marginBottom: '6px', background: i <= step - 1 ? '#3ECF8E' : '#e0e0e0' }} />
+              <div style={{ fontSize: '0.5625rem', color: i === step - 1 ? '#3ECF8E' : '#aaa', fontWeight: i === step - 1 ? '700' : '400' }}>{s}</div>
             </div>
           ))}
         </div>
 
         {error && <div style={{ background: '#fff1f0', color: '#ff4d4f', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.8125rem' }}>{error}</div>}
 
-        {/* STEP 1 — Personal Details */}
         {step === 1 && (
           <div className="card">
             <h2 style={{ marginBottom: '16px' }}>👤 Personal Details</h2>
@@ -243,27 +223,16 @@ function StaffSelfRegister({ session, onLogout }) {
           </div>
         )}
 
-        {/* STEP 2 — Medical Info */}
         {step === 2 && (
           <div className="card">
             <h2 style={{ marginBottom: '16px' }}>🏥 Medical Information</h2>
-
             <div className="form-group">
               <label>Have you ever experienced a seizure?</label>
               <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
-                <button
-                  onClick={() => setForm({ ...form, has_seizures: 'No', seizure_type: '', medication: '' })}
-                  style={{ flex: 1, padding: '10px', border: form.has_seizures === 'No' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: form.has_seizures === 'No' ? '#e6fff5' : 'white', color: form.has_seizures === 'No' ? '#0F6E56' : '#666', fontWeight: form.has_seizures === 'No' ? '500' : '400' }}>
-                  No
-                </button>
-                <button
-                  onClick={() => setForm({ ...form, has_seizures: 'Yes' })}
-                  style={{ flex: 1, padding: '10px', border: form.has_seizures === 'Yes' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: form.has_seizures === 'Yes' ? '#e6fff5' : 'white', color: form.has_seizures === 'Yes' ? '#0F6E56' : '#666', fontWeight: form.has_seizures === 'Yes' ? '500' : '400' }}>
-                  Yes
-                </button>
+                <button onClick={() => setForm({ ...form, has_seizures: 'No', seizure_type: '', medication: '' })} style={{ flex: 1, padding: '10px', border: form.has_seizures === 'No' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: form.has_seizures === 'No' ? '#e6fff5' : 'white', color: form.has_seizures === 'No' ? '#0F6E56' : '#666' }}>No</button>
+                <button onClick={() => setForm({ ...form, has_seizures: 'Yes' })} style={{ flex: 1, padding: '10px', border: form.has_seizures === 'Yes' ? '2px solid #3ECF8E' : '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: form.has_seizures === 'Yes' ? '#e6fff5' : 'white', color: form.has_seizures === 'Yes' ? '#0F6E56' : '#666' }}>Yes</button>
               </div>
             </div>
-
             {form.has_seizures === 'Yes' && (
               <>
                 <div className="form-group">
@@ -272,11 +241,7 @@ function StaffSelfRegister({ session, onLogout }) {
                     <option value="">-- Select seizure type --</option>
                     {seizureTypes.map(s => <option key={s.value} value={s.value}>{s.value}</option>)}
                   </select>
-                  {selectedSeizure && (
-                    <div style={{ background: '#e6fff5', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8125rem', color: '#0F6E56', marginTop: '-8px', marginBottom: '12px' }}>
-                      ℹ️ {selectedSeizure.desc}
-                    </div>
-                  )}
+                  {selectedSeizure && <div style={{ background: '#e6fff5', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8125rem', color: '#0F6E56', marginTop: '-8px', marginBottom: '12px' }}>ℹ️ {selectedSeizure.desc}</div>}
                 </div>
                 <div className="form-group">
                   <label>My current medication</label>
@@ -287,18 +252,13 @@ function StaffSelfRegister({ session, onLogout }) {
                 </div>
               </>
             )}
-
             <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setStep(1)}>← Back</button>
-              <button className="btn btn-primary" style={{ flex: 1 }}
-                onClick={() => { if (!form.has_seizures) return setError('Please answer the seizure question'); setError(''); setStep(3) }}>
-                Next →
-              </button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { if (!form.has_seizures) return setError('Please answer the seizure question'); setError(''); setStep(3) }}>Next →</button>
             </div>
           </div>
         )}
 
-        {/* STEP 3 — Health Screening */}
         {step === 3 && (
           <div className="card">
             <h2 style={{ marginBottom: '4px' }}>📋 Health Screening</h2>
@@ -306,10 +266,7 @@ function StaffSelfRegister({ session, onLogout }) {
             {screeningQuestions.map((q, i) => (
               <div key={q.id} style={{ marginBottom: '14px', padding: '12px', background: screenAnswers[q.id] !== undefined ? '#f9fffe' : '#f9f9f9', borderRadius: '8px', border: screenAnswers[q.id] !== undefined ? '1px solid #3ECF8E' : '1px solid #eee' }}>
                 <p style={{ fontSize: '0.8125rem', color: '#333', marginBottom: '8px', fontWeight: '500' }}>{i + 1}. {q.text}</p>
-                <select
-                  value={screenAnswers[q.id]?.index ?? ''}
-                  onChange={e => { const idx = parseInt(e.target.value); setScreenAnswer(q.id, idx, q.weights[idx]) }}
-                  style={{ marginBottom: 0 }}>
+                <select value={screenAnswers[q.id]?.index ?? ''} onChange={e => { const idx = parseInt(e.target.value); setScreenAnswer(q.id, idx, q.weights[idx]) }} style={{ marginBottom: 0 }}>
                   <option value="">-- Select answer --</option>
                   {q.options.map((opt, oi) => <option key={oi} value={oi}>{opt}</option>)}
                 </select>
@@ -317,15 +274,11 @@ function StaffSelfRegister({ session, onLogout }) {
             ))}
             <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setStep(2)}>← Back</button>
-              <button className="btn btn-primary" style={{ flex: 1 }}
-                onClick={() => { if (!screeningComplete) return setError('Please answer all screening questions'); setError(''); setStep(4) }}>
-                Next →
-              </button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { if (!screeningComplete) return setError('Please answer all screening questions'); setError(''); setStep(4) }}>Next →</button>
             </div>
           </div>
         )}
 
-        {/* STEP 4 — Emergency Contact */}
         {step === 4 && (
           <div className="card">
             <h2 style={{ marginBottom: '16px' }}>🆘 Emergency Contact</h2>
@@ -348,16 +301,12 @@ function StaffSelfRegister({ session, onLogout }) {
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setStep(3)}>← Back</button>
-              <button className="btn btn-primary" style={{ flex: 2 }} onClick={handleSubmit} disabled={saving}>
-                {saving ? 'Submitting...' : '✅ Submit Registration'}
-              </button>
+              <button className="btn btn-primary" style={{ flex: 2 }} onClick={handleSubmit} disabled={saving}>{saving ? 'Submitting...' : '✅ Submit Registration'}</button>
             </div>
           </div>
         )}
 
-        <button onClick={onLogout} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '0.8125rem', marginTop: '8px' }}>
-          Logout
-        </button>
+        <button onClick={onLogout} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '0.8125rem', marginTop: '8px' }}>Logout</button>
       </div>
     </div>
   )
